@@ -1,6 +1,6 @@
 import { ArrowLeft, LockKeyhole, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import BrandPanel from './BrandPanel.jsx'
+import BrandPanel from './PanelMarca.jsx'
 
 function AuthLayout({ children, variant = 'login' }) {
   const isRegister = variant === 'register'
