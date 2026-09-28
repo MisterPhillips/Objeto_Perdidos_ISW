@@ -41,7 +41,6 @@ function RegisterForm() {
   const [correo, setCorreo] = useState('')
   const [contrasena, setContrasena] = useState('')
   const [confirmacion, setConfirmacion] = useState('')
-  const [aceptaTerminos, setAceptaTerminos] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
@@ -134,22 +133,6 @@ function RegisterForm() {
             value={confirmacion}
           />
         </div>
-
-        <label className="flex items-start gap-2 text-[11px] leading-relaxed text-[#718594]">
-          <input
-            checked={aceptaTerminos}
-            className="mt-0.5 size-4 shrink-0 accent-[#1688c7]"
-            onChange={(event) => setAceptaTerminos(event.target.checked)}
-            required
-            type="checkbox"
-          />
-          <span>
-            Acepto los{' '}
-            <a className="font-semibold text-[#1688c7] underline" href="https://www.ubiobio.cl/" rel="noreferrer" target="_blank">Términos</a>
-            {' '}y la{' '}
-            <a className="font-semibold text-[#1688c7] underline" href="https://www.ubiobio.cl/" rel="noreferrer" target="_blank">Política de privacidad</a>.
-          </span>
-        </label>
 
         <button className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#24516e] bg-[#073252] text-[13px] font-semibold text-white shadow-[0_6px_14px_rgb(7_50_82_/_16%)] transition hover:-translate-y-px hover:bg-[#0d4268] disabled:cursor-wait disabled:opacity-[.78]" disabled={isSubmitting} type="submit">
           {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
