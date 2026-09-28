@@ -9,5 +9,6 @@ router.post('/register', validateRegister, registerUser);
 //////////////////// LOGIN ////////////////////
 
 router.post('/login', validateLogin, loginUser);
+// Export the router
 
 export default router;
