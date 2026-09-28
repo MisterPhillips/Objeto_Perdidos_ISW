@@ -1,5 +1,5 @@
-import AuthLayout from '../components/AuthLayout.jsx'
-import RegisterForm from '../components/RegisterForm.jsx'
+import AuthLayout from '../components/EstructuraAutenticacion.jsx'
+import RegisterForm from '../components/FormularioRegistro.jsx'
 
 function RegisterPage() {
   return (

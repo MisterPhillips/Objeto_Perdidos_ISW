@@ -1,5 +1,5 @@
-import AuthLayout from '../components/AuthLayout.jsx'
-import LoginForm from '../components/LoginForm.jsx'
+import AuthLayout from '../components/EstructuraAutenticacion.jsx'
+import LoginForm from '../components/FormularioInicioSesion.jsx'
 
 function LoginPage() {
   return (
