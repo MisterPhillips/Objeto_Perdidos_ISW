@@ -3,7 +3,7 @@ import { Eye, EyeOff, LockKeyhole, Mail, UserRound, UserRoundPlus } from 'lucide
 import { Link } from 'react-router-dom'
 import { register } from '../services/authService.js'
 
-function PasswordField({ id, label, onChange, placeholder, value }) {
+function CampoContrasena({ id, label, onChange, placeholder, value }) {
   const [isVisible, setIsVisible] = useState(false)
 
   return (
@@ -36,7 +36,7 @@ function PasswordField({ id, label, onChange, placeholder, value }) {
   )
 }
 
-function RegisterForm() {
+function FormularioRegistro() {
   const [nombre, setNombre] = useState('')
   const [correo, setCorreo] = useState('')
   const [contrasena, setContrasena] = useState('')
@@ -118,14 +118,14 @@ function RegisterForm() {
         </div>
 
         <div className="grid grid-cols-1 gap-[14px] min-[681px]:grid-cols-2">
-          <PasswordField
+          <CampoContrasena
             id="password"
             label="Contraseña"
             onChange={(event) => setContrasena(event.target.value)}
             placeholder="Mínimo 8 caracteres"
             value={contrasena}
           />
-          <PasswordField
+          <CampoContrasena
             id="confirm-password"
             label="Confirmar contraseña"
             onChange={(event) => setConfirmacion(event.target.value)}
@@ -155,4 +155,4 @@ function RegisterForm() {
   )
 }
 
-export default RegisterForm
+export default FormularioRegistro
