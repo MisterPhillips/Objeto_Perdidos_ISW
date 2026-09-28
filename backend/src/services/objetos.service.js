@@ -114,3 +114,93 @@ export const cambiarEstadoObjeto = async (objetoId, estado) => {
     },
   });
 };
+
+//////////////////// ACTUALIZAR DATOS DEL OBJETO ////////////////////
+
+export const actualizarObjeto = async (objetoId, cambios) => {
+  const objeto = await prisma.objeto.findUnique({
+    where: { id: objetoId },
+  });
+
+  if (!objeto) {
+    const error = new Error('El objeto indicado no existe.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const data = {};
+
+  if (cambios.descripcion !== undefined) {
+    if (typeof cambios.descripcion !== 'string' || !cambios.descripcion.trim()) {
+      const error = new Error('La descripción no puede estar vacía.');
+      error.statusCode = 400;
+      throw error;
+    }
+    data.descripcion = cambios.descripcion.trim();
+  }
+
+  if (cambios.categoriaId !== undefined) {
+    const categoria = await prisma.categoria.findUnique({
+      where: { id: cambios.categoriaId },
+    });
+
+    if (!categoria) {
+      const error = new Error('La categoría indicada no existe.');
+      error.statusCode = 404;
+      throw error;
+    }
+    data.categoriaId = cambios.categoriaId;
+  }
+
+  if (cambios.puntoRetiroId !== undefined) {
+    const puntoRetiro = await prisma.puntoRetiro.findUnique({
+      where: { id: cambios.puntoRetiroId },
+    });
+
+    if (!puntoRetiro) {
+      const error = new Error('El punto de retiro indicado no existe.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (!puntoRetiro.habilitado) {
+      const error = new Error('El punto de retiro indicado no está habilitado.');
+      error.statusCode = 400;
+      throw error;
+    }
+    data.puntoRetiroId = cambios.puntoRetiroId;
+  }
+
+  if (Object.keys(data).length === 0) {
+    const error = new Error('Debes indicar al menos un dato válido para actualizar.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return prisma.objeto.update({
+    where: { id: objetoId },
+    data,
+    include: {
+      categoria: true,
+      puntoRetiro: true,
+    },
+  });
+};
+
+//////////////////// ELIMINAR OBJETO ////////////////////
+
+export const eliminarObjeto = async (objetoId) => {
+  const objeto = await prisma.objeto.findUnique({
+    where: { id: objetoId },
+  });
+
+  if (!objeto) {
+    const error = new Error('El objeto indicado no existe.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await prisma.objeto.delete({
+    where: { id: objetoId },
+  });
+};
