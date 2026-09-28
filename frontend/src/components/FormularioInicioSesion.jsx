@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import { ArrowRight, Eye, EyeOff, IdCard, LockKeyhole } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { login } from '../services/authService.js'
 
-function LoginForm() {
-  const [rut, setRut] = useState('')
+function FormularioInicioSesion() {
+  const [correo, setCorreo] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [remember, setRemember] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState('error')
@@ -20,7 +19,7 @@ function LoginForm() {
     setIsSubmitting(true)
 
     try {
-      await login({ rut: rut.trim(), contrasena: password, remember })
+      await login({ correo: correo.trim(), contrasena: password })
       setMessageType('success')
       setMessage('Inicio de sesión exitoso.')
     } catch (error) {
@@ -49,18 +48,19 @@ function LoginForm() {
       <form onSubmit={handleSubmit}>
         <div className="grid gap-4">
           <div>
-            <label className="mb-[6px] block text-xs font-medium text-[#334b5d]" htmlFor="rut">RUT</label>
+            <label className="mb-[6px] block text-xs font-medium text-[#334b5d]" htmlFor="correo">Correo electrónico</label>
             <div className="flex h-[47px] items-center gap-[11px] rounded-xl border border-[#dce6ec] bg-white px-[13px] shadow-[0_4px_12px_rgb(20_49_70_/_5%)] transition-[border-color,box-shadow] focus-within:border-[#6ab5d9] focus-within:shadow-[0_0_0_3px_rgb(22_136_199_/_12%)]">
-              <IdCard className="shrink-0 text-[#236b98]" size={17} aria-hidden="true" />
+              <Mail className="shrink-0 text-[#236b98]" size={17} aria-hidden="true" />
               <input
-                autoComplete="username"
+                autoComplete="email"
                 className="h-full w-full min-w-0 border-0 bg-transparent text-[13px] text-[#183247] outline-none placeholder:text-[#9aaab5]"
-                id="rut"
-                name="rut"
-                onChange={(event) => setRut(event.target.value)}
-                placeholder="12.345.678-9"
+                id="correo"
+                name="correo"
+                onChange={(event) => setCorreo(event.target.value)}
+                placeholder="nombre@alumnos.ubiobio.cl"
                 required
-                value={rut}
+                type="email"
+                value={correo}
               />
             </div>
           </div>
@@ -92,17 +92,7 @@ function LoginForm() {
           </div>
         </div>
 
-        <div className="mb-5 mt-[18px] flex items-center justify-between gap-3 max-[380px]:flex-col max-[380px]:items-start">
-          <label className="flex cursor-pointer items-center gap-2 text-xs text-[#8293a0]" htmlFor="remember">
-            <input
-              checked={remember}
-              className="m-0 size-[17px] accent-[#1688c7]"
-              id="remember"
-              onChange={(event) => setRemember(event.target.checked)}
-              type="checkbox"
-            />
-            <span>Recordarme</span>
-          </label>
+        <div className="mb-5 mt-[18px] flex justify-end">
           <button className="border-0 bg-transparent px-0 py-[5px] text-[11px] font-semibold text-[#1688c7] hover:text-[#096da8] hover:underline" onClick={() => showPendingAction('recovery')} type="button">
             ¿Olvidaste tu contraseña?
           </button>
@@ -136,4 +126,4 @@ function LoginForm() {
   )
 }
 
-export default LoginForm
+export default FormularioInicioSesion

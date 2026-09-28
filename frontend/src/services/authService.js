@@ -1,10 +1,10 @@
 import { ApiError, apiRequest } from '../config/apiClient.js'
 
-export async function login({ rut, contrasena, remember }) {
+export async function login({ correo, contrasena }) {
   try {
     return await apiRequest('/login', {
       method: 'POST',
-      body: JSON.stringify({ rut, contrasena, remember }),
+      body: JSON.stringify({ correo, contrasena }),
     })
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
