@@ -24,7 +24,7 @@ enum EstadoObjeto {
 }
 
 // ============================
-// MODELOS
+// MODELOS Agregar booleana en objetos privado o publico, cambiar nombre de ubicacion a sede
 // ============================
 
 model Usuario {
@@ -45,6 +45,7 @@ model Categoria {
   id          Int      @id @default(autoincrement())
   nombre      String   @unique @db.VarChar(80)
   descripcion String?  @db.Text
+  activa      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -74,6 +75,7 @@ model Objeto {
   estado          EstadoObjeto @default(EN_REVISION)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  
 
   categoriaId     Int
   categoria       Categoria    @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
