@@ -33,6 +33,12 @@ export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId,
     throw error;
   }
 
+  if (!categoria.activa) {
+    const error = new Error('La categoría indicada está inactiva.');
+    error.statusCode = 400;
+    throw error;
+  }
+
   const nuevoObjeto = await prisma.objeto.create({
     data: {
       descripcion,
