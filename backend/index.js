@@ -2,8 +2,10 @@ import 'dotenv/config'
 import cors from 'cors'
 import express from 'express'
 import prisma from './src/config/prisma.js'
-import authRoutes from './src/routes/auth.routes.js' // 1. Importa tus rutas de auth[cite: 1]
+import authRoutes from './src/routes/auth.routes.js' 
 import objetosRoutes from './src/routes/objetos.routes.js'
+import categoriasRoutes from './src/routes/categorias.routes.js'
+import puntosRetiroRoutes from './src/routes/puntoretiro.routes.js'
 
 const app = express()
 const port = Number(process.env.PORT) || 3000
@@ -24,6 +26,8 @@ app.get('/api/health', async (_request, response) => {
 // 2. Monta las rutas de autenticación con el prefijo /api/auth[cite: 1]
 app.use('/api', authRoutes)
 app.use('/api', objetosRoutes)
+app.use('/api', categoriasRoutes)
+app.use('/api', puntosRetiroRoutes)
 
 app.listen(port, () => {
     console.log(`Backend listening on port ${port}`)
