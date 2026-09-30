@@ -21,6 +21,7 @@ const secciones = [
   { label: 'Solicitudes', path: '/app/solicitudes', icon: ClipboardList },
   { label: 'Puntos de retiro', path: '/app/puntos-retiro', icon: Building2 },
   { label: 'Categorías', path: '/app/categorias', icon: Tags },
+  { label: 'Registrar entregas', path: '/funcionario/retiros', icon: ClipboardList, funcionario: true },
 ]
 
 function PaginaPrincipal({ children }) {
@@ -28,7 +29,8 @@ function PaginaPrincipal({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
   const usuario = getSessionUser()
-  const seccionActiva = secciones.find(({ path }) => path === location.pathname)
+  const seccionesVisibles = secciones.filter(({ funcionario }) => !funcionario || usuario?.rol === 'FUNCIONARIO')
+  const seccionActiva = seccionesVisibles.find(({ path }) => path === location.pathname)
     || (location.pathname === '/admin/usuarios'
       ? { label: 'Usuarios', path: '/admin/usuarios' }
       : secciones[0])
@@ -95,7 +97,7 @@ function PaginaPrincipal({ children }) {
         <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-3 py-6">
           <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7fa0b4]">Aplicación</p>
           <div className="grid gap-1">
-            {secciones.map(enlaceSeccion)}
+            {seccionesVisibles.map(enlaceSeccion)}
           </div>
           {usuario?.rol === 'ADMIN' && (
             <>
