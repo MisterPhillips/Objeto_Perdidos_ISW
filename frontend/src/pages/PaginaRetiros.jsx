@@ -76,7 +76,10 @@ function PaginaRetiros() {
 
   function actualizarCampo(event) {
     const { name, value, checked, type } = event.target
-    setFormulario((actual) => ({ ...actual, [name]: type === 'checkbox' ? checked : value }))
+    const valor = name === 'rutRetirante'
+      ? formatearRut(value)
+      : value
+    setFormulario((actual) => ({ ...actual, [name]: type === 'checkbox' ? checked : valor }))
   }
 
   async function registrarEntrega(event) {
@@ -134,11 +137,23 @@ function PaginaRetiros() {
             </label>
             <label className="grid gap-1.5 text-xs font-semibold text-[#31566a]">
               RUT
-              <input className={campoClase} maxLength="20" name="rutRetirante" onChange={actualizarCampo} placeholder="12.345.678-9" required value={formulario.rutRetirante} />
+              <input
+                aria-describedby="rut-help"
+                className={campoClase}
+                inputMode="numeric"
+                maxLength="12"
+                name="rutRetirante"
+                onChange={actualizarCampo}
+                pattern="[0-9]{1,2}\.?[0-9]{3}\.?[0-9]{3}-[0-9Kk]"
+                placeholder="12.345.678-5"
+                required
+                value={formulario.rutRetirante}
+              />
             </label>
             <label className="grid gap-1.5 text-xs font-semibold text-[#31566a]">
               Correo
-              <input className={campoClase} maxLength="150" name="correoRetirante" onChange={actualizarCampo} required type="email" value={formulario.correoRetirante} />
+              <input className={campoClase} maxLength="150" name="correoRetirante" onChange={actualizarCampo} placeholder="correo@universidad.cl" required type="email" value={formulario.correoRetirante} />
+              <span className="font-normal text-[#81929f]">Debe pertenecer a un usuario universitario registrado y activo.</span>
             </label>
             <label className="flex items-start gap-2 text-xs leading-5 text-[#536d7c]">
               <input className="mt-1 accent-[#1781a8]" name="identidadVerificada" onChange={actualizarCampo} required type="checkbox" checked={formulario.identidadVerificada} />
