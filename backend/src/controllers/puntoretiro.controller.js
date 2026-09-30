@@ -3,6 +3,8 @@ import {
 	crearPuntoRetiro as crearPuntoRetiroService,
 	eliminarPuntoRetiro as eliminarPuntoRetiroService,
 	listarPuntosRetiro as listarPuntosRetiroService,
+	listarPuntosRetiroConCantidadObjetos as listarPuntosRetiroConCantidadObjetosService,
+	listarPuntosRetiroParaMapa as listarPuntosRetiroParaMapaService,
 	obtenerPuntoRetiro as obtenerPuntoRetiroService,
 } from '../services/puntoretiro.service.js';
 //habilitado indica si el punto de retiro está activo o no, y se puede filtrar por este campo en la lista de puntos de retiro
@@ -148,6 +150,37 @@ export const eliminarPuntoRetiro = async (req, res) => {
 		return res.status(200).json({
 			message: 'Punto de retiro deshabilitado exitosamente.',
 			puntoRetiro,
+		});
+	} catch (error) {
+		return res.status(error.statusCode || 500).json({
+			error: error.message || 'Error interno del servidor.',
+		});
+	}
+};
+
+export const listarPuntosRetiroConCantidadObjetos = async (req, res) => {
+	try {
+		const puntosRetiro = await listarPuntosRetiroConCantidadObjetosService();
+		return res.status(200).json({
+			message: 'Puntos de retiro y cantidad de objetos obtenidos exitosamente.',
+			puntosRetiro: puntosRetiro.map(({ _count, ...puntoRetiro }) => ({
+				...puntoRetiro,
+				cantidadObjetos: _count.objetos,
+			})),
+		});
+	} catch (error) {
+		return res.status(error.statusCode || 500).json({
+			error: error.message || 'Error interno del servidor.',
+		});
+	}
+};
+
+export const listarPuntosRetiroParaMapa = async (_req, res) => {
+	try {
+		const puntosRetiro = await listarPuntosRetiroParaMapaService();
+		return res.status(200).json({
+			message: 'Puntos de retiro y objetos recientes obtenidos exitosamente.',
+			puntosRetiro,
 		});
 	} catch (error) {
 		return res.status(error.statusCode || 500).json({
