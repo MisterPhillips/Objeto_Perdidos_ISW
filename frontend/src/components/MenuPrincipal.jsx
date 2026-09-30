@@ -8,7 +8,7 @@ import { clearSession, getSessionUser } from '../services/sessionService.js'
 // Es el menú para cualquier miembro de la Universidad (alumnos, profesores, etc.).
 // El menú con privilegios de administrador/funcionario se agregará más adelante.
 const opciones = [
-  { icon: Search, titulo: 'Explorar objetos perdidos', descripcion: 'Revisa el catálogo consolidado de objetos encontrados en las facultades.', rf: 'RF-03 · RF-04' },
+  { icon: Search, titulo: 'Explorar objetos perdidos', descripcion: 'Revisa el catálogo consolidado de objetos encontrados en las facultades.'},
 ]
 
 function MenuPrincipal() {
@@ -71,7 +71,7 @@ function MenuPrincipal() {
                 <Map size={24} aria-hidden="true" />
               </span>
               <div>
-                <p className="mb-1 flex items-center gap-2 text-[10px] font-bold uppercase text-[#63c4e2]"><MapPin size={12} aria-hidden="true" /> RF-03 · Mapa institucional</p>
+                <p className="mb-1 flex items-center gap-2 text-[10px] font-bold uppercase text-[#63c4e2]"><MapPin size={12} aria-hidden="true" /> Mapa institucional</p>
                 <h2 className="m-0 text-xl font-medium">Mapa interactivo</h2>
                 <p className="mb-0 mt-1.5 text-[13px] leading-relaxed text-[#b5c9d7]">Ubica en el campus los puntos de retiro habilitados y encuentra dónde retirar tu objeto.</p>
               </div>
@@ -82,14 +82,13 @@ function MenuPrincipal() {
           </article>
 
           <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 min-[681px]:grid-cols-2">
-            {opciones.map(({ icon: Icon, titulo, descripcion, rf }) => (
+            {opciones.map(({ icon: Icon, titulo, descripcion}) => (
               <li key={titulo}>
                 <button className="flex h-full w-full items-start gap-4 rounded-[20px] border border-[#edf1f4] bg-white p-5 text-left shadow-[0_18px_45px_rgb(24_50_71_/_9%)] transition hover:-translate-y-px hover:border-[#6ab5d9]" type="button">
                   <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[rgb(22_136_199_/_10%)] text-[#1688c7]">
                     <Icon size={20} aria-hidden="true" />
                   </span>
                   <span className="min-w-0">
-                    <span className="mb-1 block text-[10px] font-bold uppercase text-[#1688c7]">{rf}</span>
                     <span className="block text-[15px] font-medium text-[#183247]">{titulo}</span>
                     <span className="mt-1 block text-xs leading-relaxed text-[#8293a0]">{descripcion}</span>
                   </span>
