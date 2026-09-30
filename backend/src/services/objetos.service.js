@@ -3,7 +3,7 @@ const estadosObjeto = ['EN_REVISION', 'DISPONIBLE', 'ENTREGADO'];
 
 //////////////////// REGISTRAR OBJETO ////////////////////
 
-export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId, registradoPorId }) => {
+export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId, objetoPrivado = false, registradoPorId }) => {
   const puntoRetiro = await prisma.puntoRetiro.findUnique({
     where: { id: puntoRetiroId },
   });
@@ -41,6 +41,7 @@ export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId,
       descripcion,
       categoriaId,
       puntoRetiroId,
+      objetoPrivado,
       registradoPorId,
     },
     include: {
@@ -59,6 +60,7 @@ export const obtenerCatalogo = async (filtros) => {
 
   const where = {
     estado: 'DISPONIBLE', //solo se muestran los objetos disponibles en el catálogo
+    objetoPrivado: false,
     puntoRetiro: {
       habilitado: true, //solo se muestran los objetos de puntos de retiro habilitados
     },
