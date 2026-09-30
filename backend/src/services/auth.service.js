@@ -11,7 +11,7 @@ const sanitizeUser = (usuario) => ({
   updatedAt: usuario.updatedAt,
 });
 
-export const registerUserService = async ({ nombre, correo, contrasena, rol }) => {
+export const registerUserService = async ({ nombre, correo, contrasena }) => {
   const correoNormalizado = correo.trim().toLowerCase();
 
   const usuarioExistente = await prisma.usuario.findUnique({
@@ -31,7 +31,7 @@ export const registerUserService = async ({ nombre, correo, contrasena, rol }) =
       nombre,
       correo: correoNormalizado,
       contrasena: contraseñaHasheada,
-      rol: rol || 'ESTUDIANTE',
+      rol: 'ESTUDIANTE',
     },
     select: {
       id: true,
@@ -71,6 +71,12 @@ export const loginUserService = async ({ correo, contrasena }) => {
 
   if (!usuario) {
     const error = new Error('Credenciales inválidas.');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  if (!usuario.activo) {
+    const error = new Error('La cuenta está desactivada.');
     error.statusCode = 401;
     throw error;
   }

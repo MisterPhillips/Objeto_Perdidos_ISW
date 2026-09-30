@@ -6,7 +6,7 @@ const benefits = [
   { icon: ClipboardPlus, label: 'Reporta lo que perdiste' },
 ]
 
-function BrandPanel({ variant = 'login' }) {
+function PanelMarca({ variant = 'login' }) {
   const isRegister = variant === 'register'
 
   return (
@@ -54,4 +54,4 @@ function BrandPanel({ variant = 'login' }) {
   )
 }
 
-export default BrandPanel
+export default PanelMarca
