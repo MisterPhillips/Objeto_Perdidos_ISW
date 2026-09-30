@@ -5,7 +5,7 @@ import {
 	listarPuntosRetiro as listarPuntosRetiroService,
 	obtenerPuntoRetiro as obtenerPuntoRetiroService,
 } from '../services/puntoretiro.service.js';
-
+//habilitado indica si el punto de retiro está activo o no, y se puede filtrar por este campo en la lista de puntos de retiro
 const obtenerIdPuntoRetiro = (id) => {
 	const puntoRetiroId = Number(id);
 	return Number.isInteger(puntoRetiroId) && puntoRetiroId > 0 ? puntoRetiroId : null;

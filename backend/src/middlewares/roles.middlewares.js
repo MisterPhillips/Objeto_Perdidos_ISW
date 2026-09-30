@@ -16,4 +16,5 @@ export const permitirRoles = (...rolesPermitidos) => {
 };
 
 export const soloFuncionario = permitirRoles("FUNCIONARIO");
+export const soloEstudiante = permitirRoles("ESTUDIANTE");
 export const soloAdmin = permitirRoles("ADMIN");

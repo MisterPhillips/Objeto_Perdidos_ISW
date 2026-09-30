@@ -15,7 +15,7 @@ export const crearObjeto = async (req, res) => {
       });
     }
 
-    const registradoPorId = req.user.id;
+    const registradoPorId = req.user.id; //verifica que el usuario esté autenticado y obtiene su id del token
 
     const nuevoObjeto = await registrarObjeto({
       descripcion,
