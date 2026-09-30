@@ -5,6 +5,7 @@ import {
 	listarPuntosRetiro as listarPuntosRetiroService,
 	listarPuntosRetiroConCantidadObjetos as listarPuntosRetiroConCantidadObjetosService,
 	listarPuntosRetiroParaMapa as listarPuntosRetiroParaMapaService,
+	obtenerPuntoRetiroConObjetos as obtenerPuntoRetiroConObjetosService,
 	obtenerPuntoRetiro as obtenerPuntoRetiroService,
 } from '../services/puntoretiro.service.js';
 //habilitado indica si el punto de retiro está activo o no, y se puede filtrar por este campo en la lista de puntos de retiro
@@ -182,6 +183,22 @@ export const listarPuntosRetiroParaMapa = async (_req, res) => {
 			message: 'Puntos de retiro y objetos recientes obtenidos exitosamente.',
 			puntosRetiro,
 		});
+	} catch (error) {
+		return res.status(error.statusCode || 500).json({
+			error: error.message || 'Error interno del servidor.',
+		});
+	}
+};
+
+export const obtenerPuntoRetiroConObjetos = async (req, res) => {
+	try {
+		const puntoRetiroId = obtenerIdPuntoRetiro(req.params.id);
+		if (!puntoRetiroId) {
+			return res.status(400).json({ error: 'El identificador del punto de retiro no es válido.' });
+		}
+
+		const puntoRetiro = await obtenerPuntoRetiroConObjetosService(puntoRetiroId);
+		return res.status(200).json({ puntoRetiro });
 	} catch (error) {
 		return res.status(error.statusCode || 500).json({
 			error: error.message || 'Error interno del servidor.',
