@@ -1,7 +1,4 @@
-// services/objetos.service.js
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../config/prisma.js';
 const estadosObjeto = ['EN_REVISION', 'DISPONIBLE', 'ENTREGADO'];
 
 //////////////////// REGISTRAR OBJETO ////////////////////
@@ -47,7 +44,7 @@ export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId,
       registradoPorId,
     },
     include: {
-      categoria: true,
+      categoria: true, //estos include permiten que al crear un objeto, se devuelvan también los datos de la categoría y del punto de retiro asociados a ese objeto
       puntoRetiro: true,
     },
   });
@@ -58,24 +55,24 @@ export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId,
 //////////////////// CATÁLOGO CONSOLIDADO ////////////////////
 
 export const obtenerCatalogo = async (filtros) => {
-  const { facultad, categoriaId, estado } = filtros;
+  const { facultad, categoriaId } = filtros;
 
   const where = {
+    estado: 'DISPONIBLE', //solo se muestran los objetos disponibles en el catálogo
     puntoRetiro: {
-      habilitado: true,
+      habilitado: true, //solo se muestran los objetos de puntos de retiro habilitados
+    },
+    categoria: {
+      activa: true,//solo se muestran los objetos de categorías activas
     },
   };
 
   if (facultad) {
-    where.puntoRetiro.facultad = facultad;
+    where.puntoRetiro.facultad = facultad; //si se indica la facultad en los filtros, se agregará a la condición where para filtrar los objetos por la facultad del punto de retiro
   }
 
   if (categoriaId) {
-    where.categoriaId = Number(categoriaId);
-  }
-
-  if (estado) {
-    where.estado = estado;
+    where.categoriaId = Number(categoriaId);//si se indica la categoría en los filtros, se agregará a la condición where para filtrar los objetos por la categoría
   }
 
   const objetos = await prisma.objeto.findMany({
@@ -85,7 +82,7 @@ export const obtenerCatalogo = async (filtros) => {
       puntoRetiro: true,
     },
     orderBy: {
-      createdAt: 'desc',
+      createdAt: 'desc', //los objetos se ordenan por fecha de creación, de más reciente a más antiguo
     },
   });
 
@@ -97,6 +94,12 @@ export const obtenerCatalogo = async (filtros) => {
 export const cambiarEstadoObjeto = async (objetoId, estado) => {
   if (!estadosObjeto.includes(estado)) {
     const error = new Error('El estado indicado no es válido.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (estado === 'ENTREGADO') {
+    const error = new Error('La entrega debe registrarse al aprobar una solicitud de reclamo.');
     error.statusCode = 400;
     throw error;
   }

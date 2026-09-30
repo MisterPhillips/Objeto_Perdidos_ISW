@@ -23,6 +23,7 @@ export const listarCategorias = async (_req, res) => {
 
 export const crearCategoria = async (req, res) => {
 	try {
+		// Limpia el nombre y usa una cadena vacía si falta o no es texto; la descripción se lee sin modificar.
 		const nombre = typeof req.body?.nombre === 'string' ? req.body.nombre.trim() : '';
 		const descripcion = req.body?.descripcion;
 
@@ -57,12 +58,12 @@ export const crearCategoria = async (req, res) => {
 
 export const actualizarCategoria = async (req, res) => {
 	try {
-		const categoriaId = Number(req.params.id);
+		const categoriaId = Number(req.params.id);//toma id de la categoria de la url y lo convierte a numero
 		if (!Number.isInteger(categoriaId) || categoriaId <= 0) {
 			return res.status(400).json({ error: 'El identificador de la categoría no es válido.' });
 		}
 
-		const datos = {};
+		const datos = {};//objeto que contendra los datos a actualizar
 		if (req.body?.nombre !== undefined) {
 			if (typeof req.body.nombre !== 'string' || !req.body.nombre.trim()) {
 				return res.status(400).json({ error: 'El nombre debe ser texto y no puede estar vacío.' });
@@ -83,7 +84,7 @@ export const actualizarCategoria = async (req, res) => {
 			datos.descripcion = typeof descripcion === 'string' ? descripcion.trim() || null : null;
 		}
 
-		if (Object.keys(datos).length === 0) {
+		if (Object.keys(datos).length === 0) { //obtine las llaves del objeto datos y si no hay ninguna, significa que no se proporcionaron datos para actualizar
 			return res.status(400).json({ error: 'Indica el nombre o la descripción para actualizar.' });
 		}
 
