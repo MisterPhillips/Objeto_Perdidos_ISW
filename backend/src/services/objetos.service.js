@@ -101,7 +101,7 @@ export const cambiarEstadoObjeto = async (objetoId, estado) => {
   }
 
   if (estado === 'ENTREGADO') {
-    const error = new Error('La entrega debe registrarse al aprobar una solicitud de reclamo.');
+    const error = new Error('La entrega debe registrarse desde el módulo de entregas.');
     error.statusCode = 400;
     throw error;
   }
