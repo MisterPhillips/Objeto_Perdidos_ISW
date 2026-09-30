@@ -25,7 +25,7 @@ function FormularioInicioSesion() {
       saveSession(data.token, data.usuario)
       setMessageType('success')
       setMessage('Inicio de sesión exitoso.')
-      if (data.usuario.rol === 'ADMIN') navigate('/admin/usuarios')
+      navigate(data.usuario.rol === 'ADMIN' ? '/admin/usuarios' : '/menu', { replace: true })
     } catch (error) {
       setMessageType('error')
       setMessage(error.message || 'No fue posible iniciar sesión. Inténtalo nuevamente.')

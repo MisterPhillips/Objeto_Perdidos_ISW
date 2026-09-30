@@ -2,6 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import PaginaInicioSesion from './pages/PaginaInicioSesion.jsx'
 import PaginaRegistro from './pages/PaginaRegistro.jsx'
 import PaginaUsuarios from './pages/PaginaUsuarios.jsx'
+import PaginaMenuPrincipal from './pages/PaginaMenuPrincipal.jsx'
+import RutaProtegida from './components/RutaProtegida.jsx'
 import { getSessionToken, getSessionUser } from './services/sessionService.js'
 
 function RutaAdministrador({ children }) {
@@ -18,6 +20,7 @@ function App() {
         <Route element={<Navigate replace to="/login" />} path="/" />
         <Route element={<PaginaInicioSesion />} path="/login" />
         <Route element={<PaginaRegistro />} path="/registro" />
+        <Route element={<RutaProtegida><PaginaMenuPrincipal /></RutaProtegida>} path="/menu" />
         <Route element={<RutaAdministrador><PaginaUsuarios /></RutaAdministrador>} path="/admin/usuarios" />
         <Route element={<Navigate replace to="/login" />} path="*" />
       </Routes>
