@@ -64,3 +64,24 @@ export const eliminarPuntoRetiro = async (puntoRetiroId) => {
 		data: { habilitado: false }, //cual es la difrencia entre false y trues es que false significa que el punto de retiro está deshabilitado y true significa que está habilitado
 	});
 };
+
+export const listarPuntosRetiroConCantidadObjetos = async () => {
+	return prisma.puntoRetiro.findMany({
+		include: { _count: { select: { objetos: true } } },
+		orderBy: [{ facultad: 'asc' }, { nombre: 'asc' }],
+	});
+};
+
+export const listarPuntosRetiroParaMapa = async () => {
+	return prisma.puntoRetiro.findMany({
+		include: {
+			objetos: {
+				where: { objetoPrivado: false },
+				orderBy: { createdAt: 'desc' },
+				take: 5,
+				include: { categoria: { select: { nombre: true } } },
+			},
+		},
+		orderBy: [{ facultad: 'asc' }, { nombre: 'asc' }],
+	});
+};
