@@ -66,7 +66,7 @@ model PuntoRetiro {
   id         Int      @id @default(autoincrement())
   nombre     String   @unique @db.VarChar(100)
   facultad   String   @db.VarChar(100)
-  ubicacion  String?  @db.VarChar(150)
+  descripcion String? @db.Text
   habilitado Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -83,6 +83,7 @@ model Objeto {
   estado          EstadoObjeto @default(EN_REVISION)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  objetoPrivado   Boolean      @default(false)
   
 
   categoriaId     Int
