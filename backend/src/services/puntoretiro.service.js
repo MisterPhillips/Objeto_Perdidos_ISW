@@ -85,3 +85,24 @@ export const listarPuntosRetiroParaMapa = async () => {
 		orderBy: [{ facultad: 'asc' }, { nombre: 'asc' }],
 	});
 };
+
+export const obtenerPuntoRetiroConObjetos = async (puntoRetiroId) => {
+	const puntoRetiro = await prisma.puntoRetiro.findUnique({
+		where: { id: puntoRetiroId },
+		include: {
+			objetos: {
+				where: { objetoPrivado: false },
+				orderBy: { createdAt: 'desc' },
+				include: { categoria: { select: { nombre: true } } },
+			},
+		},
+	});
+
+	if (!puntoRetiro) {
+		const error = new Error('El punto de retiro no existe.');
+		error.statusCode = 404;
+		throw error;
+	}
+
+	return puntoRetiro;
+};
