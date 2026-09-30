@@ -27,6 +27,15 @@ export const registrarRetiro = async ({
   correoRetirante,
   funcionarioId,
 }) => prisma.$transaction(async (tx) => {
+  const usuarioRetirante = await tx.usuario.findUnique({
+    where: { correo: correoRetirante },
+    select: { id: true, activo: true },
+  });
+
+  if (!usuarioRetirante || !usuarioRetirante.activo) {
+    throw errorConEstado('El correo del retirante no corresponde a un usuario universitario activo.', 400);
+  }
+
   const objetoActualizado = await tx.objeto.updateMany({
     where: { id: objetoId, estado: 'DISPONIBLE' },
     data: { estado: 'ENTREGADO' },
