@@ -1,3 +1,5 @@
+import { getSessionToken } from '../services/sessionService.js'
+
 const configuredApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 const API_BASE_URL = configuredApiUrl.replace(/\/+$/, '')
 
@@ -18,6 +20,7 @@ export async function apiRequest(path, options = {}) {
       headers: {
         Accept: 'application/json',
         ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(getSessionToken() ? { Authorization: `Bearer ${getSessionToken()}` } : {}),
         ...options.headers,
       },
     })

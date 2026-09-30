@@ -1,13 +1,13 @@
 import { ArrowLeft, LockKeyhole, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import BrandPanel from './BrandPanel.jsx'
+import PanelMarca from './PanelMarca.jsx'
 
-function AuthLayout({ children, variant = 'login' }) {
+function EstructuraAutenticacion({ children, variant = 'login' }) {
   const isRegister = variant === 'register'
 
   return (
     <main className="grid min-h-screen min-w-[320px] grid-cols-1 bg-[#f3f7f9] font-sans text-[#183247] antialiased min-[681px]:grid-cols-[minmax(310px,38%)_1fr] min-[901px]:grid-cols-[minmax(370px,37.5%)_1fr]">
-      <BrandPanel variant={variant} />
+      <PanelMarca variant={variant} />
       <section className="flex min-h-screen min-w-0 flex-col justify-between bg-[#f3f7f9] px-[clamp(28px,5.4vw,80px)] pt-8 pb-[19px] max-[900px]:px-7 max-[680px]:min-h-[calc(100vh-153px)] max-[680px]:px-5 max-[680px]:pt-5 max-[680px]:pb-4 max-[380px]:px-[15px]" aria-label={isRegister ? 'Registro de cuenta' : 'Acceso a la plataforma'}>
         <header className="flex items-center justify-between gap-4">
           {isRegister ? (
@@ -42,4 +42,4 @@ function AuthLayout({ children, variant = 'login' }) {
   )
 }
 
-export default AuthLayout
+export default EstructuraAutenticacion

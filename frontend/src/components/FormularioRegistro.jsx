@@ -3,7 +3,7 @@ import { Eye, EyeOff, LockKeyhole, Mail, UserRound, UserRoundPlus } from 'lucide
 import { Link } from 'react-router-dom'
 import { register } from '../services/authService.js'
 
-function PasswordField({ id, label, onChange, placeholder, value }) {
+function CampoContrasena({ id, label, onChange, placeholder, value }) {
   const [isVisible, setIsVisible] = useState(false)
 
   return (
@@ -36,12 +36,11 @@ function PasswordField({ id, label, onChange, placeholder, value }) {
   )
 }
 
-function RegisterForm() {
+function FormularioRegistro() {
   const [nombre, setNombre] = useState('')
   const [correo, setCorreo] = useState('')
   const [contrasena, setContrasena] = useState('')
   const [confirmacion, setConfirmacion] = useState('')
-  const [aceptaTerminos, setAceptaTerminos] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
@@ -119,14 +118,14 @@ function RegisterForm() {
         </div>
 
         <div className="grid grid-cols-1 gap-[14px] min-[681px]:grid-cols-2">
-          <PasswordField
+          <CampoContrasena
             id="password"
             label="Contraseña"
             onChange={(event) => setContrasena(event.target.value)}
             placeholder="Mínimo 8 caracteres"
             value={contrasena}
           />
-          <PasswordField
+          <CampoContrasena
             id="confirm-password"
             label="Confirmar contraseña"
             onChange={(event) => setConfirmacion(event.target.value)}
@@ -134,22 +133,6 @@ function RegisterForm() {
             value={confirmacion}
           />
         </div>
-
-        <label className="flex items-start gap-2 text-[11px] leading-relaxed text-[#718594]">
-          <input
-            checked={aceptaTerminos}
-            className="mt-0.5 size-4 shrink-0 accent-[#1688c7]"
-            onChange={(event) => setAceptaTerminos(event.target.checked)}
-            required
-            type="checkbox"
-          />
-          <span>
-            Acepto los{' '}
-            <a className="font-semibold text-[#1688c7] underline" href="https://www.ubiobio.cl/" rel="noreferrer" target="_blank">Términos</a>
-            {' '}y la{' '}
-            <a className="font-semibold text-[#1688c7] underline" href="https://www.ubiobio.cl/" rel="noreferrer" target="_blank">Política de privacidad</a>.
-          </span>
-        </label>
 
         <button className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#24516e] bg-[#073252] text-[13px] font-semibold text-white shadow-[0_6px_14px_rgb(7_50_82_/_16%)] transition hover:-translate-y-px hover:bg-[#0d4268] disabled:cursor-wait disabled:opacity-[.78]" disabled={isSubmitting} type="submit">
           {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
@@ -172,4 +155,4 @@ function RegisterForm() {
   )
 }
 
-export default RegisterForm
+export default FormularioRegistro
