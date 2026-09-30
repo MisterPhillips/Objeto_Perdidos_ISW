@@ -75,6 +75,12 @@ export const loginUserService = async ({ correo, contrasena }) => {
     throw error;
   }
 
+  if (!usuario.activo) {
+    const error = new Error('La cuenta está desactivada.');
+    error.statusCode = 401;
+    throw error;
+  }
+
   const contraseñaValida = await bcrypt.compare(contrasena, usuario.contrasena);
 
   if (!contraseñaValida) {

@@ -23,6 +23,12 @@ enum EstadoObjeto {
   ENTREGADO
 }
 
+enum EstadoSolicitudReclamo {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
 // ============================
 // MODELOS Agregar booleana en objetos privado o publico, cambiar nombre de ubicacion a sede
 // ============================
@@ -30,6 +36,7 @@ enum EstadoObjeto {
 model Usuario {
   id         Int        @id @default(autoincrement())
   rol        RolUsuario @default(ESTUDIANTE)
+  activo     Boolean    @default(true)
   nombre     String     @db.VarChar(100)
   correo     String     @unique @db.VarChar(150)
   contrasena String     @db.VarChar(255)
@@ -37,6 +44,7 @@ model Usuario {
   updatedAt  DateTime   @updatedAt
 
   objetosRegistrados Objeto[]
+  solicitudesReclamo SolicitudReclamo[]
 
   @@map("usuarios")
 }
@@ -85,10 +93,30 @@ model Objeto {
 
   registradoPorId Int
   registradoPor   Usuario      @relation(fields: [registradoPorId], references: [id], onDelete: Restrict)
+  
+  solicitudesReclamo SolicitudReclamo[]
 
   @@index([puntoRetiroId])
   @@index([categoriaId])
   @@index([estado])
   @@map("objetos")
+}
+
+model SolicitudReclamo {
+  id        Int                     @id @default(autoincrement())
+  detalle   String                  @db.VarChar(500)
+  estado    EstadoSolicitudReclamo  @default(PENDIENTE)
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+
+  usuarioId Int
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+
+  objetoId Int
+  objeto   Objeto  @relation(fields: [objetoId], references: [id], onDelete: Restrict)
+
+  @@index([usuarioId, estado])
+  @@index([objetoId, estado])
+  @@map("solicitudes_reclamo")
 }
 
