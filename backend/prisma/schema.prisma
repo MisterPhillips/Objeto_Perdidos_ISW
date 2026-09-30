@@ -45,6 +45,7 @@ model Usuario {
 
   objetosRegistrados Objeto[]
   solicitudesReclamo SolicitudReclamo[]
+  retirosRealizados  Retiro[]
 
   @@map("usuarios")
 }
@@ -96,6 +97,7 @@ model Objeto {
   registradoPor   Usuario      @relation(fields: [registradoPorId], references: [id], onDelete: Restrict)
   
   solicitudesReclamo SolicitudReclamo[]
+  retiro             Retiro?
 
   @@index([puntoRetiroId])
   @@index([categoriaId])
@@ -121,3 +123,20 @@ model SolicitudReclamo {
   @@map("solicitudes_reclamo")
 }
 
+model Retiro {
+  id                  Int      @id @default(autoincrement())
+  nombreRetirante     String   @db.VarChar(100)
+  rutRetirante        String   @db.VarChar(20)
+  correoRetirante     String   @db.VarChar(150)
+  fechaRetiro         DateTime @default(now())
+
+  objetoId            Int      @unique
+  objeto              Objeto   @relation(fields: [objetoId], references: [id], onDelete: Restrict)
+
+  funcionarioId       Int
+  funcionario         Usuario  @relation(fields: [funcionarioId], references: [id], onDelete: Restrict)
+
+  @@index([fechaRetiro])
+  @@index([rutRetirante])
+  @@map("retiros")
+}
