@@ -81,7 +81,7 @@ model PuntoRetiro {
 model Objeto {
   id              Int          @id @default(autoincrement())
   descripcion     String       @db.VarChar(150)
-  estado          EstadoObjeto @default(EN_REVISION)
+  estado          EstadoObjeto @default(DISPONIBLE)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   objetoPrivado   Boolean      @default(false)
