@@ -7,12 +7,16 @@ import {
 
 export const crearObjeto = async (req, res) => {
   try {
-    const { descripcion, categoriaId, puntoRetiroId } = req.body;
+    const { descripcion, categoriaId, puntoRetiroId, objetoPrivado = false } = req.body;
 
     if (!descripcion || !categoriaId || !puntoRetiroId) {
       return res.status(400).json({
         error: 'Descripción, categoría y punto de retiro son obligatorios.',
       });
+    }
+
+    if (typeof objetoPrivado !== 'boolean') {
+      return res.status(400).json({ error: 'El campo objetoPrivado debe ser booleano.' });
     }
 
     const registradoPorId = req.user.id; //verifica que el usuario esté autenticado y obtiene su id del token
@@ -21,6 +25,7 @@ export const crearObjeto = async (req, res) => {
       descripcion,
       categoriaId,
       puntoRetiroId,
+      objetoPrivado,
       registradoPorId,
     });
 
