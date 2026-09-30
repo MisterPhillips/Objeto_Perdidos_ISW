@@ -3,6 +3,7 @@ import prisma from '../config/prisma.js';
 export const obtenerCategorias = async () => {
   return prisma.categoria.findMany({ //findmany es un método de Prisma que devuelve todos los registros de la tabla categoria
     select: { //para mostrar solo los campos que quiero mostrar
+      id: true,
       nombre: true,
       descripcion: true,
     },
