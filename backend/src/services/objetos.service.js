@@ -59,7 +59,9 @@ export const obtenerCatalogo = async (filtros) => {
   const { facultad, categoriaId } = filtros;
 
   const where = {
-    estado: 'DISPONIBLE', //solo se muestran los objetos disponibles en el catálogo
+    estado: {
+      in: ['DISPONIBLE', 'EN_REVISION'],
+    },
     objetoPrivado: false,
     puntoRetiro: {
       habilitado: true, //solo se muestran los objetos de puntos de retiro habilitados
@@ -90,6 +92,102 @@ export const obtenerCatalogo = async (filtros) => {
 
   return objetos;
 };
+
+export const obtenerObjetosGestion = async () => prisma.objeto.findMany({
+  include: {
+    categoria: true,
+    puntoRetiro: true,
+  },
+  orderBy: { createdAt: 'desc' },
+});
+
+export const actualizarObjeto = async (objetoId, datos) => {
+  const objeto = await prisma.objeto.findUnique({ where: { id: objetoId } });
+  if (!objeto) {
+    const error = new Error('El objeto indicado no existe.');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (objeto.estado === 'ENTREGADO') {
+    const error = new Error('No se puede editar un objeto que ya fue entregado.');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  if (datos.categoriaId !== undefined) {
+    const categoria = await prisma.categoria.findUnique({ where: { id: datos.categoriaId } });
+    if (!categoria || !categoria.activa) {
+      const error = new Error('La categoría indicada no existe o está inactiva.');
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+  if (datos.puntoRetiroId !== undefined) {
+    const puntoRetiro = await prisma.puntoRetiro.findUnique({ where: { id: datos.puntoRetiroId } });
+    if (!puntoRetiro || !puntoRetiro.habilitado) {
+      const error = new Error('El punto de retiro indicado no existe o está deshabilitado.');
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  return prisma.objeto.update({
+    where: { id: objetoId },
+    data: datos,
+    include: { categoria: true, puntoRetiro: true },
+  });
+};
+
+export const eliminarObjeto = async (objetoId) => {
+  const objeto = await prisma.objeto.findUnique({
+    where: { id: objetoId },
+    select: {
+      id: true,
+      solicitudesReclamo: { select: { id: true }, take: 1 },
+    },
+  });
+  if (!objeto) {
+    const error = new Error('El objeto indicado no existe.');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (objeto.solicitudesReclamo.length > 0) {
+    const error = new Error('No se puede eliminar un objeto que tiene solicitudes de reclamo.');
+    error.statusCode = 409;
+    throw error;
+  }
+  return prisma.objeto.delete({ where: { id: objetoId } });
+};
+
+export const entregarObjeto = async (objetoId, datosRetiro, funcionarioId) => prisma.$transaction(async (tx) => {
+  const objeto = await tx.objeto.findUnique({ where: { id: objetoId }, select: { id: true, estado: true } });
+  if (!objeto) {
+    const error = new Error('El objeto indicado no existe.');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (objeto.estado !== 'DISPONIBLE') {
+    const error = new Error('Solo se pueden entregar objetos disponibles.');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const actualizacion = await tx.objeto.updateMany({
+    where: { id: objetoId, estado: 'DISPONIBLE' },
+    data: { estado: 'ENTREGADO' },
+  });
+  if (actualizacion.count !== 1) {
+    const error = new Error('El objeto ya no está disponible para entrega.');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  await tx.retiro.create({ data: { ...datosRetiro, objetoId, funcionarioId } });
+  return tx.objeto.findUnique({
+    where: { id: objetoId },
+    include: { categoria: true, puntoRetiro: true },
+  });
+});
 
 //////////////////// ACTUALIZAR ESTADO ////////////////////
 
