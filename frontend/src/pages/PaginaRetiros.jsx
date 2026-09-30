@@ -65,7 +65,10 @@ function PaginaRetiros() {
 
   function actualizarCampo(event) {
     const { name, value, checked, type } = event.target
-    setFormulario((actual) => ({ ...actual, [name]: type === 'checkbox' ? checked : value }))
+    const valor = name === 'rutRetirante'
+      ? formatearRut(value)
+      : value
+    setFormulario((actual) => ({ ...actual, [name]: type === 'checkbox' ? checked : valor }))
   }
 
   async function registrarEntrega(event) {
