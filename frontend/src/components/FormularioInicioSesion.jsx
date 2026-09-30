@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { login } from '../services/authService.js'
+import { saveSession } from '../services/sessionService.js'
 
 function FormularioInicioSesion() {
+  const navigate = useNavigate()
   const [correo, setCorreo] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -19,9 +21,11 @@ function FormularioInicioSesion() {
     setIsSubmitting(true)
 
     try {
-      await login({ correo: correo.trim(), contrasena: password })
+      const data = await login({ correo: correo.trim(), contrasena: password })
+      saveSession(data.token, data.usuario)
       setMessageType('success')
       setMessage('Inicio de sesión exitoso.')
+      if (data.usuario.rol === 'ADMIN') navigate('/admin/usuarios')
     } catch (error) {
       setMessageType('error')
       setMessage(error.message || 'No fue posible iniciar sesión. Inténtalo nuevamente.')
