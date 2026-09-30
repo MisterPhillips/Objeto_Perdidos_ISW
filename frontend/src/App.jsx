@@ -5,6 +5,7 @@ import PaginaObjetos from './pages/PaginaObjetos.jsx'
 import PaginaPrincipal from './pages/PaginaPrincipal.jsx'
 import PaginaRegistro from './pages/PaginaRegistro.jsx'
 import PaginaUsuarios from './pages/PaginaUsuarios.jsx'
+import PaginaRetiros from './pages/PaginaRetiros.jsx'
 import { getSessionToken, getSessionUser } from './services/sessionService.js'
 
 function RutaAdministrador({ children }) {
@@ -20,6 +21,13 @@ function RutaAutenticada({ children }) {
     : <Navigate replace to="/login" />
 }
 
+function RutaFuncionario({ children }) {
+  const usuario = getSessionUser()
+  return getSessionToken() && usuario?.rol === 'FUNCIONARIO'
+    ? children
+    : <Navigate replace to="/inicio" />
+}
+
 function RutaInicial() {
   return <Navigate replace to={getSessionToken() ? '/inicio' : '/login'} />
 }
@@ -32,6 +40,7 @@ function App() {
         <Route element={<PaginaInicioSesion />} path="/login" />
         <Route element={<PaginaRegistro />} path="/registro" />
         <Route element={<RutaAdministrador><PaginaUsuarios /></RutaAdministrador>} path="/admin/usuarios" />
+        <Route element={<RutaFuncionario><PaginaPrincipal><PaginaRetiros /></PaginaPrincipal></RutaFuncionario>} path="/funcionario/retiros" />
         <Route element={<RutaAutenticada><PaginaPrincipal /></RutaAutenticada>} path="/inicio" />
         <Route element={<RutaAutenticada><PaginaPrincipal><MapaInteractivo /></PaginaPrincipal></RutaAutenticada>} path="/app/mapa" />
         <Route element={<RutaAutenticada><PaginaPrincipal><PaginaObjetos /></PaginaPrincipal></RutaAutenticada>} path="/app/objetos" />

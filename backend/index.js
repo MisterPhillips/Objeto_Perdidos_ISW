@@ -7,6 +7,7 @@ import objetosRoutes from './src/routes/objetos.routes.js'
 import categoriasRoutes from './src/routes/categorias.routes.js'
 import puntosRetiroRoutes from './src/routes/puntoretiro.routes.js'
 import usuariosRoutes from './src/routes/usuarios.routes.js'
+import retirosRoutes from './src/routes/retiros.routes.js'
 
 const app = express()
 const port = Number(process.env.PORT) || 3000
@@ -30,6 +31,7 @@ app.use('/api', objetosRoutes)
 app.use('/api', categoriasRoutes)
 app.use('/api', puntosRetiroRoutes)
 app.use('/api', usuariosRoutes)
+app.use('/api', retirosRoutes)
 
 app.listen(port, () => {
     console.log(`Backend listening on port ${port}`)
