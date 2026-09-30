@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { AlertCircle, MapPin, PackageOpen, Plus, X } from 'lucide-react'
+import { AlertCircle, MapPin, PackageCheck, PackageOpen, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { apiRequest } from '../config/apiClient.js'
 import { getSessionUser } from '../services/sessionService.js'
 
@@ -7,6 +8,7 @@ const formatoFecha = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' })
 const campoClase = 'h-10 rounded border border-[#cbd8df] bg-white px-3 text-sm font-normal outline-none focus:border-[#1781a8]'
 
 function PaginaObjetos() {
+  const navigate = useNavigate()
   const [objetos, setObjetos] = useState([])
   const [categorias, setCategorias] = useState([])
   const [puntosRetiro, setPuntosRetiro] = useState([])
@@ -14,8 +16,10 @@ function PaginaObjetos() {
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
   const [modalAbierto, setModalAbierto] = useState(false)
+  const [objetoEditando, setObjetoEditando] = useState(null)
   const [guardando, setGuardando] = useState(false)
   const [errorFormulario, setErrorFormulario] = useState('')
+  const [errorAccion, setErrorAccion] = useState('')
   const [intentos, setIntentos] = useState(0)
   const [formulario, setFormulario] = useState({ descripcion: '', categoriaId: '', puntoRetiroId: '', objetoPrivado: false })
   const esFuncionario = getSessionUser()?.rol === 'FUNCIONARIO'
@@ -52,9 +56,15 @@ function PaginaObjetos() {
     setIntentos((actuales) => actuales + 1)
   }
 
-  function abrirFormulario() {
+  function abrirFormulario(objeto = null) {
     setErrorFormulario('')
-    setFormulario({ descripcion: '', categoriaId: '', puntoRetiroId: '', objetoPrivado: false })
+    setObjetoEditando(objeto)
+    setFormulario(objeto ? {
+      descripcion: objeto.descripcion,
+      categoriaId: String(objeto.categoriaId),
+      puntoRetiroId: String(objeto.puntoRetiroId),
+      objetoPrivado: objeto.objetoPrivado,
+    } : { descripcion: '', categoriaId: '', puntoRetiroId: '', objetoPrivado: false })
     setModalAbierto(true)
   }
 
@@ -64,8 +74,8 @@ function PaginaObjetos() {
     setErrorFormulario('')
 
     try {
-      await apiRequest('/objeto', {
-        method: 'POST',
+      const respuesta = await apiRequest(objetoEditando ? `/objeto/${objetoEditando.id}` : '/objeto', {
+        method: objetoEditando ? 'PATCH' : 'POST',
         body: JSON.stringify({
           descripcion: formulario.descripcion.trim(),
           categoriaId: Number(formulario.categoriaId),
@@ -74,10 +84,32 @@ function PaginaObjetos() {
         }),
       })
       setModalAbierto(false)
+      setObjetoEditando(null)
       setFormulario({ descripcion: '', categoriaId: '', puntoRetiroId: '', objetoPrivado: false })
-      setAviso('Objeto registrado. Quedó en revisión antes de aparecer en el catálogo.')
+      if (objetoEditando) {
+        setObjetos((actuales) => actuales.map((objeto) => objeto.id === respuesta.objeto.id ? respuesta.objeto : objeto).filter((objeto) => !objeto.objetoPrivado))
+        setAviso('Objeto actualizado.')
+      } else {
+        setAviso('Objeto registrado. Quedó en revisión antes de aparecer en el catálogo.')
+        setIntentos((actuales) => actuales + 1)
+      }
     } catch (requestError) {
       setErrorFormulario(requestError.message || 'No se pudo registrar el objeto.')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  async function eliminarObjeto(objeto) {
+    if (!window.confirm(`¿Eliminar el objeto "${objeto.descripcion}"? Esta acción no se puede deshacer.`)) return
+    setErrorAccion('')
+    setGuardando(true)
+    try {
+      await apiRequest(`/objeto/${objeto.id}`, { method: 'DELETE' })
+      setObjetos((actuales) => actuales.filter((actual) => actual.id !== objeto.id))
+      setAviso('Objeto eliminado.')
+    } catch (requestError) {
+      setErrorAccion(requestError.message || 'No se pudo eliminar el objeto.')
     } finally {
       setGuardando(false)
     }
@@ -111,6 +143,7 @@ function PaginaObjetos() {
         </div>
       )}
       {aviso && <p className="rounded-md border border-[#c7e4d3] bg-[#f1faf4] px-4 py-3 text-sm text-[#24744e]" role="status">{aviso}</p>}
+      {errorAccion && <p className="rounded-md border border-[#eccaca] bg-[#fff5f4] px-4 py-3 text-sm text-[#963d38]" role="alert">{errorAccion}</p>}
       {esFuncionario && !cargando && !error && !puedeRegistrar && (
         <p className="rounded-md border border-[#e8d9b8] bg-[#fff9ec] px-4 py-3 text-sm text-[#805d23]" role="status">
           Para registrar objetos debe existir al menos una categoría activa y un punto de retiro habilitado.
@@ -139,11 +172,27 @@ function PaginaObjetos() {
                   <p className="m-0 mt-1 text-xs text-[#687f8d]">{objeto.categoria?.nombre || 'Sin categoría'}</p>
                 </div>
               </div>
+              <p className={`mb-0 mt-3 inline-flex rounded px-2 py-1 text-[11px] font-semibold ${objeto.estado === 'DISPONIBLE' ? 'bg-[#e8f5ed] text-[#24744e]' : 'bg-[#fff6e5] text-[#805d23]'}`}>
+                {objeto.estado === 'DISPONIBLE' ? 'Disponible' : 'En revisión'}
+              </p>
               <p className="mb-0 mt-4 flex items-start gap-2 border-t border-[#e7edef] pt-3 text-xs text-[#536d7c]">
                 <MapPin aria-hidden="true" className="mt-0.5 shrink-0 text-[#1781a8]" size={14} />
                 <span>{objeto.puntoRetiro?.nombre} · {objeto.puntoRetiro?.facultad}</span>
               </p>
               <p className="mb-0 mt-2 text-[11px] text-[#81929f]">Registrado el {formatoFecha.format(new Date(objeto.createdAt))}</p>
+              {esFuncionario && (
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-[#e7edef] pt-3">
+                  <button aria-label={`Editar ${objeto.descripcion}`} className="inline-flex min-h-9 items-center gap-1.5 rounded border border-[#cbd8df] px-3 text-xs font-semibold text-[#31566a] hover:bg-[#f3f7f9] disabled:cursor-not-allowed disabled:opacity-50" disabled={guardando} onClick={() => abrirFormulario(objeto)} type="button">
+                    <Pencil aria-hidden="true" size={14} /> Editar
+                  </button>
+                  <button className="inline-flex min-h-9 items-center gap-1.5 rounded border border-[#b7d9c4] px-3 text-xs font-semibold text-[#24744e] hover:bg-[#f1faf4] disabled:cursor-not-allowed disabled:opacity-50" disabled={guardando} onClick={() => navigate('/funcionario/retiros')} type="button">
+                    <PackageCheck aria-hidden="true" size={14} /> Entregar
+                  </button>
+                  <button aria-label={`Eliminar ${objeto.descripcion}`} className="inline-flex min-h-9 items-center gap-1.5 rounded border border-[#e6c5c2] px-3 text-xs font-semibold text-[#963d38] hover:bg-[#fff5f4] disabled:cursor-not-allowed disabled:opacity-50" disabled={guardando} onClick={() => eliminarObjeto(objeto)} type="button">
+                    <Trash2 aria-hidden="true" size={14} /> Eliminar
+                  </button>
+                </div>
+              )}
             </article>
           ))}
         </div>
@@ -155,7 +204,7 @@ function PaginaObjetos() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="m-0 text-[10px] font-bold uppercase text-[#1781a8]">OBJETOS ENCONTRADOS</p>
-                <h2 className="mb-0 mt-1 text-xl font-semibold text-[#193449]" id="object-form-title">Registrar objeto perdido</h2>
+                <h2 className="mb-0 mt-1 text-xl font-semibold text-[#193449]" id="object-form-title">{objetoEditando ? 'Editar objeto encontrado' : 'Registrar objeto perdido'}</h2>
               </div>
               <button aria-label="Cerrar" className="grid size-8 place-items-center rounded border border-[#d5e0e5] text-[#526b79] hover:bg-[#f3f7f9] disabled:opacity-50" disabled={guardando} onClick={() => setModalAbierto(false)} type="button"><X size={16} /></button>
             </div>
@@ -193,12 +242,13 @@ function PaginaObjetos() {
               {errorFormulario && <p className="m-0 text-sm text-[#963d38]" role="alert">{errorFormulario}</p>}
               <div className="mt-1 flex justify-end gap-2">
                 <button className="rounded border border-[#cbd8df] px-4 py-2 text-sm font-semibold hover:bg-[#f3f7f9] disabled:opacity-50" disabled={guardando} onClick={() => setModalAbierto(false)} type="button">Cancelar</button>
-                <button className="rounded bg-[#0b4263] px-4 py-2 text-sm font-semibold text-white hover:bg-[#155779] disabled:opacity-60" disabled={guardando} type="submit">{guardando ? 'Guardando...' : 'Registrar objeto'}</button>
+                <button className="rounded bg-[#0b4263] px-4 py-2 text-sm font-semibold text-white hover:bg-[#155779] disabled:opacity-60" disabled={guardando} type="submit">{guardando ? 'Guardando...' : objetoEditando ? 'Guardar cambios' : 'Registrar objeto'}</button>
               </div>
             </form>
           </section>
         </div>
       )}
+
     </section>
   )
 }
