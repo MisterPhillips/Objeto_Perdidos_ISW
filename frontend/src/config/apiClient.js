@@ -1,6 +1,6 @@
 import { getSessionToken } from '../services/sessionService.js'
 
-const configuredApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const configuredApiUrl = import.meta.env.VITE_API_URL || '/api'
 const API_BASE_URL = configuredApiUrl.replace(/\/+$/, '')
 
 export class ApiError extends Error {
