@@ -6,6 +6,10 @@ import { getSessionUser } from '../services/sessionService.js'
 
 const formatoFecha = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' })
 const campoClase = 'h-10 rounded border border-[#cbd8df] bg-white px-3 text-sm font-normal outline-none focus:border-[#1781a8]'
+const obtenerIdObjeto = (id) => {
+  const valor = Number(id)
+  return Number.isSafeInteger(valor) && valor > 0 ? valor : null
+}
 
 function PaginaObjetos() {
   const navigate = useNavigate()
@@ -58,6 +62,10 @@ function PaginaObjetos() {
 
   function abrirFormulario(objeto = null) {
     setErrorFormulario('')
+    if (objeto && !obtenerIdObjeto(objeto.id)) {
+      setErrorAccion('No se puede editar este objeto porque no tiene un identificador válido.')
+      return
+    }
     setObjetoEditando(objeto)
     setFormulario(objeto ? {
       descripcion: objeto.descripcion,
@@ -70,12 +78,18 @@ function PaginaObjetos() {
 
   async function guardarObjeto(event) {
     event.preventDefault()
+    const objetoId = objetoEditando ? obtenerIdObjeto(objetoEditando.id) : null
+    if (objetoEditando && !objetoId) {
+      setErrorFormulario('El objeto seleccionado no tiene un identificador válido. Cierra la edición y usa “Nuevo objeto perdido” para registrar uno nuevo.')
+      return
+    }
+
     setGuardando(true)
     setErrorFormulario('')
 
     try {
-      const respuesta = await apiRequest(objetoEditando ? `/objeto/${objetoEditando.id}` : '/objeto', {
-        method: objetoEditando ? 'PATCH' : 'POST',
+      const respuesta = await apiRequest(objetoId ? `/objeto/${objetoId}` : '/objeto', {
+        method: objetoId ? 'PATCH' : 'POST',
         body: JSON.stringify({
           descripcion: formulario.descripcion.trim(),
           categoriaId: Number(formulario.categoriaId),
@@ -86,11 +100,11 @@ function PaginaObjetos() {
       setModalAbierto(false)
       setObjetoEditando(null)
       setFormulario({ descripcion: '', categoriaId: '', puntoRetiroId: '', objetoPrivado: false })
-      if (objetoEditando) {
+      if (objetoId) {
         setObjetos((actuales) => actuales.map((objeto) => objeto.id === respuesta.objeto.id ? respuesta.objeto : objeto).filter((objeto) => !objeto.objetoPrivado))
         setAviso('Objeto actualizado.')
       } else {
-        setAviso('Objeto registrado. Quedó en revisión antes de aparecer en el catálogo.')
+        setAviso('Objeto registrado y disponible en el catálogo.')
         setIntentos((actuales) => actuales + 1)
       }
     } catch (requestError) {
@@ -128,7 +142,7 @@ function PaginaObjetos() {
           <button
             className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#0b4263] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#155779] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!puedeRegistrar}
-            onClick={abrirFormulario}
+            onClick={() => abrirFormulario()}
             type="button"
           >
             <Plus aria-hidden="true" size={17} /> Nuevo objeto perdido
@@ -172,8 +186,8 @@ function PaginaObjetos() {
                   <p className="m-0 mt-1 text-xs text-[#687f8d]">{objeto.categoria?.nombre || 'Sin categoría'}</p>
                 </div>
               </div>
-              <p className={`mb-0 mt-3 inline-flex rounded px-2 py-1 text-[11px] font-semibold ${objeto.estado === 'DISPONIBLE' ? 'bg-[#e8f5ed] text-[#24744e]' : 'bg-[#fff6e5] text-[#805d23]'}`}>
-                {objeto.estado === 'DISPONIBLE' ? 'Disponible' : 'En revisión'}
+              <p className={`mb-0 mt-3 inline-flex rounded px-2 py-1 text-[11px] font-semibold ${objeto.estado === 'ENTREGADO' ? 'bg-[#edf0f2] text-[#687783]' : 'bg-[#e8f5ed] text-[#24744e]'}`}>
+                {objeto.estado === 'ENTREGADO' ? 'Entregado' : 'Disponible'}
               </p>
               <p className="mb-0 mt-4 flex items-start gap-2 border-t border-[#e7edef] pt-3 text-xs text-[#536d7c]">
                 <MapPin aria-hidden="true" className="mt-0.5 shrink-0 text-[#1781a8]" size={14} />
