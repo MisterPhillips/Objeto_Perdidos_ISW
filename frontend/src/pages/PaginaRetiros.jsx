@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AlertCircle, CheckCircle2, ClipboardCheck, History, PackageOpen } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ClipboardCheck, History, PackageOpen, RefreshCw } from 'lucide-react'
 import { apiRequest } from '../config/apiClient.js'
 
 const campoClase = 'h-10 w-full rounded border border-[#cbd8df] bg-white px-3 text-sm outline-none focus:border-[#1781a8]'
@@ -124,13 +124,19 @@ function PaginaRetiros() {
           {aviso && <p className="mb-4 flex items-start gap-2 rounded-md border border-[#c7e4d3] bg-[#f1faf4] px-3 py-2.5 text-sm text-[#24744e]" role="status"><CheckCircle2 className="mt-0.5 shrink-0" size={16} />{aviso}</p>}
 
           <div className="grid gap-4">
-            <label className="grid gap-1.5 text-xs font-semibold text-[#31566a]">
-              Objeto
-              <select className={campoClase} name="objetoId" onChange={actualizarCampo} required value={formulario.objetoId}>
+            <div className="grid gap-1.5">
+              <div className="flex items-center justify-between gap-3">
+                <label className="text-xs font-semibold text-[#31566a]" htmlFor="objetoId">Objeto</label>
+                <button aria-label="Actualizar objetos disponibles" className="inline-flex items-center gap-1 text-xs font-semibold text-[#16769c] hover:text-[#0b4263] disabled:cursor-wait disabled:opacity-50" disabled={cargando || guardando} onClick={() => void cargarDatos()} title="Actualizar objetos" type="button">
+                  <RefreshCw aria-hidden="true" size={14} /> Actualizar
+                </button>
+              </div>
+              <select className={campoClase} id="objetoId" name="objetoId" onChange={actualizarCampo} required value={formulario.objetoId}>
                 <option value="">Selecciona un objeto disponible</option>
                 {objetos.map((objeto) => <option key={objeto.id} value={objeto.id}>{objeto.descripcion} · {objeto.puntoRetiro?.nombre}</option>)}
               </select>
-            </label>
+              {!cargando && objetos.length === 0 && <p className="m-0 text-xs text-[#805d23]" role="status">No hay objetos disponibles. Registra uno primero o actualiza la lista.</p>}
+            </div>
             <label className="grid gap-1.5 text-xs font-semibold text-[#31566a]">
               Nombre de quien retira
               <input className={campoClase} maxLength="100" name="nombreRetirante" onChange={actualizarCampo} required value={formulario.nombreRetirante} />

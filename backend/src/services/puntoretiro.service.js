@@ -25,10 +25,10 @@ export const obtenerPuntoRetiro = async (puntoRetiroId) => {
 	return buscarPuntoRetiro(puntoRetiroId);
 };
 
-export const crearPuntoRetiro = async ({ nombre, facultad, ubicacion }) => {
+export const crearPuntoRetiro = async ({ nombre, facultad, descripcion }) => {
 	try {
 		return await prisma.puntoRetiro.create({
-			data: { nombre, facultad, ubicacion },
+			data: { nombre, facultad, descripcion },
 		});
 	} catch (error) {
 		if (error.code === 'P2002') {
