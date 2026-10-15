@@ -1,5 +1,5 @@
 import prisma from '../config/prisma.js';
-const estadosObjeto = ['EN_REVISION', 'DISPONIBLE', 'ENTREGADO'];
+const estadosObjeto = ['DISPONIBLE', 'ENTREGADO'];
 
 //////////////////// REGISTRAR OBJETO ////////////////////
 
@@ -39,6 +39,7 @@ export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId,
   const nuevoObjeto = await prisma.objeto.create({
     data: {
       descripcion,
+      estado: 'DISPONIBLE',
       categoriaId,
       puntoRetiroId,
       objetoPrivado,
@@ -60,7 +61,7 @@ export const obtenerCatalogo = async (filtros) => {
 
   const where = {
     estado: {
-      in: ['DISPONIBLE', 'EN_REVISION'],
+      in: ['DISPONIBLE'],
     },
     objetoPrivado: false,
     puntoRetiro: {
@@ -141,19 +142,10 @@ export const actualizarObjeto = async (objetoId, datos) => {
 export const eliminarObjeto = async (objetoId) => {
   const objeto = await prisma.objeto.findUnique({
     where: { id: objetoId },
-    select: {
-      id: true,
-      solicitudesReclamo: { select: { id: true }, take: 1 },
-    },
   });
   if (!objeto) {
     const error = new Error('El objeto indicado no existe.');
     error.statusCode = 404;
-    throw error;
-  }
-  if (objeto.solicitudesReclamo.length > 0) {
-    const error = new Error('No se puede eliminar un objeto que tiene solicitudes de reclamo.');
-    error.statusCode = 409;
     throw error;
   }
   return prisma.objeto.delete({ where: { id: objetoId } });
