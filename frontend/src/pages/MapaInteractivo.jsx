@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
 import { AlertCircle, Building2, Clock3, MapPin, PackageOpen, Search, X } from 'lucide-react'
-import { apiRequest } from '../config/apiClient.js'
+import MapaCampus from '../components/MapaCampus.jsx'
+import { useMapaInteractivo } from '../components/useMapaInteractivo.js'
 
 const formatoFecha = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' })
 
@@ -11,104 +11,28 @@ const estadosObjeto = {
 }
 
 function MapaInteractivo() {
-	const [puntosRetiro, setPuntosRetiro] = useState([])
-	const [cargando, setCargando] = useState(true)
-	const [error, setError] = useState('')
-	const [intentos, setIntentos] = useState(0)
-	const [puntoSeleccionado, setPuntoSeleccionado] = useState(null)
-	const [objetosPunto, setObjetosPunto] = useState([])
-	const [cargandoObjetos, setCargandoObjetos] = useState(false)
-	const [errorObjetos, setErrorObjetos] = useState('')
-	const [intentosDetalle, setIntentosDetalle] = useState(0)
-	const [busqueda, setBusqueda] = useState('')
-	const [busquedaAplicada, setBusquedaAplicada] = useState('')
-	const puntoSeleccionadoId = puntoSeleccionado?.id
-
-	useEffect(() => {
-		let vigente = true
-
-		apiRequest('/puntos-retiro/mapa')
-			.then((data) => {
-				if (vigente) setPuntosRetiro(data.puntosRetiro)
-			})
-			.catch((requestError) => {
-				if (vigente) setError(requestError.message || 'No se pudieron cargar los puntos de retiro.')
-			})
-			.finally(() => {
-				if (vigente) setCargando(false)
-			})
-
-		return () => {
-			vigente = false
-		}
-	}, [intentos])
-
-	useEffect(() => {
-		if (puntoSeleccionadoId === undefined) return undefined
-
-		let vigente = true
-		apiRequest(`/puntos-retiro/${puntoSeleccionadoId}/objetos`)
-			.then((data) => {
-				if (vigente) {
-					setPuntoSeleccionado(data.puntoRetiro)
-					setObjetosPunto(data.puntoRetiro.objetos)
-				}
-			})
-			.catch((requestError) => {
-				if (vigente) setErrorObjetos(requestError.message || 'No se pudieron cargar los objetos de este punto.')
-			})
-			.finally(() => {
-				if (vigente) setCargandoObjetos(false)
-			})
-
-		return () => {
-			vigente = false
-		}
-	}, [intentosDetalle, puntoSeleccionadoId])
-
-	useEffect(() => {
-		if (!puntoSeleccionado) return undefined
-
-		const cerrarConEscape = (event) => {
-			if (event.key === 'Escape') setPuntoSeleccionado(null)
-		}
-		window.addEventListener('keydown', cerrarConEscape)
-		return () => window.removeEventListener('keydown', cerrarConEscape)
-	}, [puntoSeleccionado])
-
-	function reintentar() {
-		setError('')
-		setCargando(true)
-		setIntentos((actuales) => actuales + 1)
-	}
-
-	function abrirPunto(punto) {
-		setPuntoSeleccionado(punto)
-		setObjetosPunto([])
-		setBusqueda('')
-		setBusquedaAplicada('')
-		setErrorObjetos('')
-		setCargandoObjetos(true)
-		setIntentosDetalle(0)
-	}
-
-	function reintentarDetalle() {
-		setErrorObjetos('')
-		setCargandoObjetos(true)
-		setIntentosDetalle((actuales) => actuales + 1)
-	}
-
-	function buscarObjetos(event) {
-		event.preventDefault()
-		setBusquedaAplicada(busqueda.trim().toLocaleLowerCase('es'))
-	}
-
-	const objetosFiltrados = objetosPunto.filter((objeto) =>
-		objeto.descripcion.toLocaleLowerCase('es').includes(busquedaAplicada),
-	)
+	const {
+		puntosRetiro,
+		cargando,
+		error,
+		puntoSeleccionado,
+		objetosPunto,
+		cargandoObjetos,
+		errorObjetos,
+		busqueda,
+		setBusqueda,
+		objetosFiltrados,
+		reintentar,
+		abrirPunto,
+		cerrarPunto,
+		reintentarDetalle,
+		buscarObjetos,
+	} = useMapaInteractivo()
 
 	return (
-		<section aria-label="Puntos de retiro y objetos recientes" className="mt-7">
+		<>
+			<MapaCampus />
+			<section aria-label="Puntos de retiro y objetos recientes" className="mt-7">
 			<div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-[#dbe4e8] pb-4">
 				<div>
 					  <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#658090]">UBICACIONES REGISTRADAS</p>
@@ -210,7 +134,7 @@ function MapaInteractivo() {
 				)}
 
 				{puntoSeleccionado && (
-					<div className="fixed inset-0 z-50 grid place-items-center bg-[#102a3a]/55 p-3 sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) setPuntoSeleccionado(null) }}>
+					<div className="fixed inset-0 z-50 grid place-items-center bg-[#102a3a]/55 p-3 sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) cerrarPunto() }}>
 						<section aria-labelledby="detalle-punto-titulo" aria-modal="true" className="flex max-h-[92dvh] w-full max-w-230 flex-col overflow-hidden rounded-lg border border-[#dbe4e8] bg-white shadow-2xl" onMouseDown={(event) => event.stopPropagation()} role="dialog">
 							<header className="flex shrink-0 items-start justify-between gap-4 border-b border-[#dbe4e8] px-5 py-4 sm:px-6">
 								<div className="flex min-w-0 items-start gap-3">
@@ -221,7 +145,7 @@ function MapaInteractivo() {
 										<p className="m-0 mt-1 text-xs text-[#687f8d]">{puntoSeleccionado.facultad}</p>
 									</div>
 								</div>
-								<button aria-label="Cerrar detalle del punto" className="grid size-9 shrink-0 place-items-center rounded border border-[#d5e0e5] text-[#526b79] hover:bg-[#f3f7f9]" onClick={() => setPuntoSeleccionado(null)} type="button"><X size={17} /></button>
+								<button aria-label="Cerrar detalle del punto" className="grid size-9 shrink-0 place-items-center rounded border border-[#d5e0e5] text-[#526b79] hover:bg-[#f3f7f9]" onClick={cerrarPunto} type="button"><X size={17} /></button>
 							</header>
 
 							<div className="grid min-h-0 grid-cols-1 gap-5 overflow-y-auto p-4 md:grid-cols-[minmax(0,1.2fr)_minmax(250px,0.8fr)] md:p-6">
@@ -283,7 +207,8 @@ function MapaInteractivo() {
 						</section>
 					</div>
 				)}
-		</section>
+			</section>
+		</>
 	)
 }
 
