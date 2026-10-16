@@ -5,7 +5,6 @@ import { apiRequest } from '../config/apiClient.js'
 const formatoFecha = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' })
 
 const estadosObjeto = {
-	EN_REVISION: { label: 'En revisión', className: 'bg-[#fff5e8] text-[#94601e]' },
 	DISPONIBLE: { label: 'Disponible', className: 'bg-[#e8f5ed] text-[#24744e]' },
 	ENTREGADO: { label: 'Entregado', className: 'bg-[#edf0f2] text-[#687783]' },
 }
@@ -182,7 +181,7 @@ function MapaInteractivo() {
 								) : (
 									<ul className="m-0 divide-y divide-[#e4eaed] rounded border border-[#e4eaed] bg-white p-0">
 										{punto.objetos.map((objeto) => {
-											const estado = estadosObjeto[objeto.estado] || estadosObjeto.EN_REVISION
+																	const estado = estadosObjeto[objeto.estado] || estadosObjeto.DISPONIBLE
 											return (
 												<li className="flex min-w-0 items-start justify-between gap-2 px-3 py-2.5" key={objeto.id}>
 													<div className="min-w-0">
@@ -251,7 +250,7 @@ function MapaInteractivo() {
 										) : (
 											<ul className="m-0 max-h-[50dvh] divide-y divide-[#e7edef] overflow-y-auto p-0">
 												{objetosFiltrados.map((objeto) => {
-													const estado = estadosObjeto[objeto.estado] || estadosObjeto.EN_REVISION
+														const estado = estadosObjeto[objeto.estado] || estadosObjeto.DISPONIBLE
 													return (
 														<li className="flex min-w-0 items-start justify-between gap-3 px-4 py-3" key={objeto.id}>
 															<div className="min-w-0">
