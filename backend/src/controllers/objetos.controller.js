@@ -17,23 +17,34 @@ const obtenerId = (id) => {
 export const crearObjeto = async (req, res) => {
   try {
     const { descripcion, categoriaId, puntoRetiroId, objetoPrivado = false } = req.body;
+    const categoriaIdValido = obtenerId(categoriaId);
+    const puntoRetiroIdValido = obtenerId(puntoRetiroId);
+    const registradoPorId = obtenerId(req.user?.id);
+    const descripcionNormalizada = typeof descripcion === 'string' ? descripcion.trim() : '';
 
-    if (!descripcion || !categoriaId || !puntoRetiroId) {
+    if (!descripcionNormalizada || descripcionNormalizada.length > 150) {
       return res.status(400).json({
-        error: 'Descripción, categoría y punto de retiro son obligatorios.',
+        error: 'La descripción es obligatoria y no puede superar los 150 caracteres.',
       });
+    }
+    if (!categoriaIdValido) {
+      return res.status(400).json({ error: 'El identificador de categoría no es válido.' });
+    }
+    if (!puntoRetiroIdValido) {
+      return res.status(400).json({ error: 'El identificador del punto de retiro no es válido.' });
+    }
+    if (!registradoPorId) {
+      return res.status(401).json({ error: 'No se pudo identificar al funcionario autenticado.' });
     }
 
     if (typeof objetoPrivado !== 'boolean') {
       return res.status(400).json({ error: 'El campo objetoPrivado debe ser booleano.' });
     }
 
-    const registradoPorId = req.user.id; //verifica que el usuario esté autenticado y obtiene su id del token
-
     const nuevoObjeto = await registrarObjeto({
-      descripcion,
-      categoriaId,
-      puntoRetiroId,
+      descripcion: descripcionNormalizada,
+      categoriaId: categoriaIdValido,
+      puntoRetiroId: puntoRetiroIdValido,
       objetoPrivado,
       registradoPorId,
     });
