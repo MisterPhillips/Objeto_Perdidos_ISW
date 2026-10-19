@@ -55,7 +55,7 @@ export const crearPuntoRetiro = async (req, res) => {
 	try {
 		const nombre = typeof req.body?.nombre === 'string' ? req.body.nombre.trim() : '';
 		const facultad = typeof req.body?.facultad === 'string' ? req.body.facultad.trim() : '';
-		const ubicacion = req.body?.ubicacion;
+		const descripcion = req.body?.descripcion ?? req.body?.ubicacion;
 
 		if (!nombre || !facultad) {
 			return res.status(400).json({ error: 'El nombre y la facultad son obligatorios.' });
@@ -63,17 +63,14 @@ export const crearPuntoRetiro = async (req, res) => {
 		if (nombre.length > 100 || facultad.length > 100) {
 			return res.status(400).json({ error: 'El nombre y la facultad no pueden superar los 100 caracteres.' });
 		}
-		if (ubicacion !== undefined && ubicacion !== null && typeof ubicacion !== 'string') {
-			return res.status(400).json({ error: 'La ubicación debe ser texto.' });
-		}
-		if (typeof ubicacion === 'string' && ubicacion.trim().length > 150) {
-			return res.status(400).json({ error: 'La ubicación no puede superar los 150 caracteres.' });
+		if (descripcion !== undefined && descripcion !== null && typeof descripcion !== 'string') {
+			return res.status(400).json({ error: 'La descripción debe ser texto.' });
 		}
 
 		const puntoRetiro = await crearPuntoRetiroService({
 			nombre,
 			facultad,
-			ubicacion: typeof ubicacion === 'string' ? ubicacion.trim() || null : ubicacion,
+			descripcion: typeof descripcion === 'string' ? descripcion.trim() || null : descripcion,
 		});
 		return res.status(201).json({
 			message: 'Punto de retiro creado exitosamente.',
@@ -106,15 +103,12 @@ export const actualizarPuntoRetiro = async (req, res) => {
 			}
 		}
 
-		if (req.body?.ubicacion !== undefined) {
-			const { ubicacion } = req.body;
-			if (ubicacion !== null && typeof ubicacion !== 'string') {
-				return res.status(400).json({ error: 'La ubicación debe ser texto.' });
+		const descripcion = req.body?.descripcion ?? req.body?.ubicacion;
+		if (descripcion !== undefined) {
+			if (descripcion !== null && typeof descripcion !== 'string') {
+				return res.status(400).json({ error: 'La descripción debe ser texto.' });
 			}
-			if (typeof ubicacion === 'string' && ubicacion.trim().length > 150) {
-				return res.status(400).json({ error: 'La ubicación no puede superar los 150 caracteres.' });
-			}
-			datos.ubicacion = typeof ubicacion === 'string' ? ubicacion.trim() || null : null;
+			datos.descripcion = typeof descripcion === 'string' ? descripcion.trim() || null : null;
 		}
 
 		if (req.body?.habilitado !== undefined) {
