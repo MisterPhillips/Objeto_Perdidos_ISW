@@ -8,43 +8,38 @@ import {
   obtenerObjetosGestion,
   cambiarEstadoObjeto,
 } from '../services/objetos.service.js';
+import {
+  actualizarEstadoObjetoSchema,
+  actualizarObjetoParamsSchema,
+  actualizarObjetoSchema,
+  crearObjetoSchema,
+  eliminarObjetoParamsSchema,
+  entregarObjetoParamsSchema,
+  entregarObjetoSchema,
+  usuarioObjetoIdSchema,
+} from '../schemas/objetos.schema.js';
 
-const obtenerId = (id) => {
-  const valor = Number(id);
-  return Number.isInteger(valor) && valor > 0 ? valor : null;
+const validar = (schema, datos, res, estado = 400) => {
+  const resultado = schema.safeParse(datos);
+  if (!resultado.success) {
+    res.status(estado).json({ error: resultado.error.issues[0].message });
+    return null;
+  }
+  return resultado.data;
 };
 
 export const crearObjeto = async (req, res) => {
   try {
-    const { descripcion, categoriaId, puntoRetiroId, objetoPrivado = false } = req.body;
-    const categoriaIdValido = obtenerId(categoriaId);
-    const puntoRetiroIdValido = obtenerId(puntoRetiroId);
-    const registradoPorId = obtenerId(req.user?.id);
-    const descripcionNormalizada = typeof descripcion === 'string' ? descripcion.trim() : '';
-
-    if (!descripcionNormalizada || descripcionNormalizada.length > 150) {
-      return res.status(400).json({
-        error: 'La descripción es obligatoria y no puede superar los 150 caracteres.',
-      });
-    }
-    if (!categoriaIdValido) {
-      return res.status(400).json({ error: 'El identificador de categoría no es válido.' });
-    }
-    if (!puntoRetiroIdValido) {
-      return res.status(400).json({ error: 'El identificador del punto de retiro no es válido.' });
-    }
-    if (!registradoPorId) {
-      return res.status(401).json({ error: 'No se pudo identificar al funcionario autenticado.' });
-    }
-
-    if (typeof objetoPrivado !== 'boolean') {
-      return res.status(400).json({ error: 'El campo objetoPrivado debe ser booleano.' });
-    }
+    const datos = validar(crearObjetoSchema, req.body, res);
+    if (!datos) return;
+    const { descripcion, categoriaId, puntoRetiroId, objetoPrivado } = datos;
+    const registradoPorId = validar(usuarioObjetoIdSchema, req.user?.id, res, 401);
+    if (!registradoPorId) return;
 
     const nuevoObjeto = await registrarObjeto({
-      descripcion: descripcionNormalizada,
-      categoriaId: categoriaIdValido,
-      puntoRetiroId: puntoRetiroIdValido,
+      descripcion,
+      categoriaId,
+      puntoRetiroId,
       objetoPrivado,
       registradoPorId,
     });
@@ -90,36 +85,12 @@ export const listarObjetosGestion = async (_req, res) => {
 
 export const actualizarObjeto = async (req, res) => {
   try {
-    const objetoId = obtenerId(req.params.id);
-    if (!objetoId) return res.status(400).json({ error: 'El identificador del objeto no es válido.' });
+    const parametros = validar(actualizarObjetoParamsSchema, req.params, res);
+    if (!parametros) return;
+    const datos = validar(actualizarObjetoSchema, req.body || {}, res);
+    if (!datos) return;
 
-    const datos = {};
-    if (req.body?.descripcion !== undefined) {
-      if (typeof req.body.descripcion !== 'string' || !req.body.descripcion.trim() || req.body.descripcion.trim().length > 150) {
-        return res.status(400).json({ error: 'La descripción debe contener entre 1 y 150 caracteres.' });
-      }
-      datos.descripcion = req.body.descripcion.trim();
-    }
-    for (const campo of ['categoriaId', 'puntoRetiroId']) {
-      if (req.body?.[campo] !== undefined) {
-        const valor = Number(req.body[campo]);
-        if (!Number.isInteger(valor) || valor <= 0) {
-          return res.status(400).json({ error: `El campo ${campo} no es válido.` });
-        }
-        datos[campo] = valor;
-      }
-    }
-    if (req.body?.objetoPrivado !== undefined) {
-      if (typeof req.body.objetoPrivado !== 'boolean') {
-        return res.status(400).json({ error: 'El campo objetoPrivado debe ser booleano.' });
-      }
-      datos.objetoPrivado = req.body.objetoPrivado;
-    }
-    if (Object.keys(datos).length === 0) {
-      return res.status(400).json({ error: 'Indica al menos un campo para actualizar.' });
-    }
-
-    const objeto = await actualizarObjetoService(objetoId, datos);
+    const objeto = await actualizarObjetoService(parametros.id, datos);
     return res.status(200).json({ message: 'Objeto actualizado exitosamente.', objeto });
   } catch (error) {
     return res.status(error.statusCode || 500).json({ error: error.message || 'Error interno del servidor.' });
@@ -128,9 +99,9 @@ export const actualizarObjeto = async (req, res) => {
 
 export const eliminarObjeto = async (req, res) => {
   try {
-    const objetoId = obtenerId(req.params.id);
-    if (!objetoId) return res.status(400).json({ error: 'El identificador del objeto no es válido.' });
-    await eliminarObjetoService(objetoId);
+    const parametros = validar(eliminarObjetoParamsSchema, req.params, res);
+    if (!parametros) return;
+    await eliminarObjetoService(parametros.id);
     return res.status(200).json({ message: 'Objeto eliminado exitosamente.' });
   } catch (error) {
     return res.status(error.statusCode || 500).json({ error: error.message || 'Error interno del servidor.' });
@@ -139,23 +110,12 @@ export const eliminarObjeto = async (req, res) => {
 
 export const entregarObjeto = async (req, res) => {
   try {
-    const objetoId = obtenerId(req.params.id);
-    if (!objetoId) return res.status(400).json({ error: 'El identificador del objeto no es válido.' });
+    const parametros = validar(entregarObjetoParamsSchema, req.params, res);
+    if (!parametros) return;
+    const datosRetiro = validar(entregarObjetoSchema, req.body || {}, res);
+    if (!datosRetiro) return;
 
-    const datosRetiro = {};
-    for (const campo of ['nombreRetirante', 'rutRetirante', 'correoRetirante']) {
-      const valor = typeof req.body?.[campo] === 'string' ? req.body[campo].trim() : '';
-      const maximo = campo === 'correoRetirante' ? 150 : campo === 'rutRetirante' ? 20 : 100;
-      if (!valor || valor.length > maximo) {
-        return res.status(400).json({ error: `El campo ${campo} es obligatorio y tiene un límite de longitud.` });
-      }
-      datosRetiro[campo] = valor;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datosRetiro.correoRetirante)) {
-      return res.status(400).json({ error: 'El correo del retirante no es válido.' });
-    }
-
-    const objeto = await entregarObjetoService(objetoId, datosRetiro, req.user.id);
+    const objeto = await entregarObjetoService(parametros.id, datosRetiro, req.user.id);
     return res.status(200).json({ message: 'Objeto entregado exitosamente.', objeto });
   } catch (error) {
     return res.status(error.statusCode || 500).json({ error: error.message || 'Error interno del servidor.' });
@@ -164,18 +124,10 @@ export const entregarObjeto = async (req, res) => {
 
 export const actualizarEstadoObjeto = async (req, res) => {
   try {
-    const objetoId = Number(req.params.id);
-    const { estado } = req.body;
+    const datos = validar(actualizarEstadoObjetoSchema, { ...req.body, id: req.params.id }, res);
+    if (!datos) return;
 
-    if (!Number.isInteger(objetoId) || objetoId <= 0) {
-      return res.status(400).json({ error: 'El identificador del objeto no es válido.' });
-    }
-
-    if (!estado) {
-      return res.status(400).json({ error: 'El estado es obligatorio.' });
-    }
-
-    const objetoActualizado = await cambiarEstadoObjeto(objetoId, estado);
+    const objetoActualizado = await cambiarEstadoObjeto(datos.id, datos.estado);
 
     return res.status(200).json({
       message: 'Estado del objeto actualizado exitosamente.',
