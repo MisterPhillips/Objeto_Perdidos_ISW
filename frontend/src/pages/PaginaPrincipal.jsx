@@ -8,7 +8,6 @@ import {
   Menu,
   PackageSearch,
   Tags,
-  UsersRound,
   X,
 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -20,8 +19,11 @@ const secciones = [
   { label: 'Mapa interactivo', path: '/app/mapa', icon: MapPin },
   { label: 'Solicitudes', path: '/app/solicitudes', icon: ClipboardList },
   { label: 'Puntos de retiro', path: '/app/puntos-retiro', icon: Building2 },
-  { label: 'Categorías', path: '/app/categorias', icon: Tags },
   { label: 'Registrar entregas', path: '/funcionario/retiros', icon: ClipboardList, funcionario: true },
+]
+
+const seccionesAdministracion = [
+  { label: 'Categorías', path: '/admin/categorias', icon: Tags },
 ]
 
 function PaginaPrincipal({ children }) {
@@ -30,10 +32,10 @@ function PaginaPrincipal({ children }) {
   const navigate = useNavigate()
   const usuario = getSessionUser()
   const seccionesVisibles = secciones.filter(({ funcionario }) => !funcionario || usuario?.rol === 'FUNCIONARIO')
-  const seccionActiva = seccionesVisibles.find(({ path }) => path === location.pathname)
-    || (location.pathname === '/admin/usuarios'
-      ? { label: 'Usuarios', path: '/admin/usuarios' }
-      : secciones[0])
+  const enlacesVisibles = usuario?.rol === 'ADMIN'
+    ? [...seccionesVisibles, ...seccionesAdministracion]
+    : seccionesVisibles
+  const seccionActiva = enlacesVisibles.find(({ path }) => path === location.pathname) || secciones[0]
 
   function cerrarSesion() {
     clearSession()
@@ -103,7 +105,7 @@ function PaginaPrincipal({ children }) {
             <>
               <p className="mb-2 mt-8 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7fa0b4]">Administración</p>
               <div className="grid gap-1">
-                {enlaceSeccion({ label: 'Usuarios', path: '/admin/usuarios', icon: UsersRound })}
+                {seccionesAdministracion.map(enlaceSeccion)}
               </div>
             </>
           )}
