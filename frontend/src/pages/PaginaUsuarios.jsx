@@ -19,28 +19,43 @@ function PaginaUsuarios() {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
-
-  async function cargarUsuarios() {
-    setCargando(true)
-    setError('')
-    try {
-      const data = await apiRequest('/usuarios')
-      setUsuarios(data.usuarios)
-    } catch (requestError) {
-      if (requestError instanceof ApiError && [401, 403].includes(requestError.status)) {
-        clearSession()
-        navigate('/login', { replace: true })
-        return
-      }
-      setError(requestError.message || 'No se pudo cargar la lista de usuarios.')
-    } finally {
-      setCargando(false)
-    }
-  }
+  const [intentos, setIntentos] = useState(0)
 
   useEffect(() => {
-    cargarUsuarios()
-  }, [])
+    let vigente = true
+
+    apiRequest('/usuarios')
+      .then((data) => {
+        if (vigente) setUsuarios(data.usuarios)
+      })
+      .catch((requestError) => {
+        if (!vigente) return
+        if (requestError instanceof ApiError && [401, 403].includes(requestError.status)) {
+          clearSession()
+          navigate('/login', { replace: true })
+          return
+        }
+        setError(requestError.message || 'No se pudo cargar la lista de usuarios.')
+      })
+      .finally(() => {
+        if (vigente) setCargando(false)
+      })
+
+    return () => {
+      vigente = false
+    }
+  }, [intentos, navigate])
+
+  function recargarUsuarios() {
+    setCargando(true)
+    setError('')
+    setIntentos((actuales) => actuales + 1)
+  }
+
+  function cerrarSesion() {
+    clearSession()
+    navigate('/login', { replace: true })
+  }
 
   function abrirCreacion() {
     setUsuarioEditando(null)
@@ -70,7 +85,7 @@ function PaginaUsuarios() {
       })
       setModalAbierto(false)
       setAviso(usuarioEditando ? 'Usuario actualizado.' : 'Usuario creado.')
-      await cargarUsuarios()
+      recargarUsuarios()
     } catch (requestError) {
       setError(requestError.message || 'No se pudo guardar el usuario.')
     } finally {
@@ -94,15 +109,10 @@ function PaginaUsuarios() {
         })
       }
       setAviso(usuario.activo ? 'Usuario desactivado.' : 'Usuario reactivado.')
-      await cargarUsuarios()
+      recargarUsuarios()
     } catch (requestError) {
       setError(requestError.message || 'No se pudo cambiar el estado del usuario.')
     }
-  }
-
-  function cerrarSesion() {
-    clearSession()
-    navigate('/login', { replace: true })
   }
 
   const usuariosFiltrados = usuarios.filter((usuario) =>
