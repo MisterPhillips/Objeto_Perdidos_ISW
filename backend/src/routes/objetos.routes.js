@@ -1,6 +1,6 @@
 // routes/objetos.routes.js
 import { Router } from "express";
-import { actualizarEstadoObjeto, actualizarObjeto, crearObjeto, eliminarObjeto, entregarObjeto, listarObjetos, listarObjetosGestion } from "../controllers/objetos.controller.js";
+import { actualizarObjeto, crearObjeto, eliminarObjeto, entregarObjeto, listarObjetos, listarObjetosGestion } from "../controllers/objetos.controller.js";
 import { verifyToken } from "../middlewares/auth.middlewares.js";
 import { soloFuncionario } from "../middlewares/roles.middlewares.js";
 
@@ -12,6 +12,5 @@ router.get("/objeto", listarObjetos);
 router.patch("/objeto/:id", verifyToken, soloFuncionario, actualizarObjeto);
 router.delete("/objeto/:id", verifyToken, soloFuncionario, eliminarObjeto);
 router.post("/objeto/:id/entrega", verifyToken, soloFuncionario, entregarObjeto);
-router.patch("/objeto/:id/estado", verifyToken, soloFuncionario, actualizarEstadoObjeto);
 
 export default router;
