@@ -6,10 +6,8 @@ import {
   registrarObjeto,
   obtenerCatalogo,
   obtenerObjetosGestion,
-  cambiarEstadoObjeto,
 } from '../services/objetos.service.js';
 import {
-  actualizarEstadoObjetoSchema,
   actualizarObjetoParamsSchema,
   actualizarObjetoSchema,
   crearObjetoSchema,
@@ -122,21 +120,3 @@ export const entregarObjeto = async (req, res) => {
   }
 };
 
-export const actualizarEstadoObjeto = async (req, res) => {
-  try {
-    const datos = validar(actualizarEstadoObjetoSchema, { ...req.body, id: req.params.id }, res);
-    if (!datos) return;
-
-    const objetoActualizado = await cambiarEstadoObjeto(datos.id, datos.estado);
-
-    return res.status(200).json({
-      message: 'Estado del objeto actualizado exitosamente.',
-      objeto: objetoActualizado,
-    });
-  } catch (error) {
-    const status = error.statusCode || 500;
-    return res.status(status).json({
-      error: error.message || 'Error interno del servidor.',
-    });
-  }
-};
