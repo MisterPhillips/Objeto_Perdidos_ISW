@@ -53,9 +53,4 @@ export const entregarObjetoSchema = z.object({
     }),
 });
 
-export const actualizarEstadoObjetoSchema = z.object({
-  id: identificador('El identificador del objeto no es válido.'),
-  estado: z.unknown().refine(Boolean, { error: 'El estado es obligatorio.' }),
-});
-
 export const usuarioObjetoIdSchema = identificador('No se pudo identificar al funcionario autenticado.');
