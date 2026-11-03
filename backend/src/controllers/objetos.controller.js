@@ -60,9 +60,15 @@ export const listarObjetos = async (req, res) => {
   try {
     const objetos = await obtenerCatalogo(req.query);
 
+    const objetosVisibles = req.user.rol === 'ESTUDIANTE'?objetos.map((objeto) => (
+      objeto.objetoPrivado?{ ...objeto, descripcion: null }
+        : objeto
+    ))
+    : objetos;
+
     return res.status(200).json({
       message: 'Catálogo obtenido exitosamente.',
-      objetos,
+      objetos: objetosVisibles,
     });
   } catch (error) {
     const status = error.statusCode || 500;
