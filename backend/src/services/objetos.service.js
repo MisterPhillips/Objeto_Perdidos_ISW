@@ -62,7 +62,6 @@ export const obtenerCatalogo = async (filtros) => {
     estado: {
       in: ['DISPONIBLE'],
     },
-    objetoPrivado: false,
     puntoRetiro: {
       habilitado: true, //solo se muestran los objetos de puntos de retiro habilitados
     },
