@@ -14,6 +14,26 @@ const obtenerIdPuntoRetiro = (id) => {
 	return Number.isInteger(puntoRetiroId) && puntoRetiroId > 0 ? puntoRetiroId : null;
 };
 
+const validarCoordenadas = (body) => {
+	const { latitud, longitud } = body ?? {};
+	if (latitud === undefined && longitud === undefined) return { datos: {} };
+	if (latitud === null && longitud === null) return { datos: { latitud: null, longitud: null } };
+	if (
+		typeof latitud !== 'number' ||
+		typeof longitud !== 'number' ||
+		!Number.isFinite(latitud) ||
+		!Number.isFinite(longitud) ||
+		latitud < -90 ||
+		latitud > 90 ||
+		longitud < -180 ||
+		longitud > 180
+	) {
+		return { error: 'La latitud y longitud deben ser coordenadas válidas.' };
+	}
+
+	return { datos: { latitud, longitud } };
+};
+
 export const listarPuntosRetiro = async (req, res) => {
 	try {
 		const { habilitado } = req.query;
@@ -56,9 +76,13 @@ export const crearPuntoRetiro = async (req, res) => {
 		const nombre = typeof req.body?.nombre === 'string' ? req.body.nombre.trim() : '';
 		const facultad = typeof req.body?.facultad === 'string' ? req.body.facultad.trim() : '';
 		const descripcion = req.body?.descripcion ?? req.body?.ubicacion;
+		const coordenadas = validarCoordenadas(req.body);
 
 		if (!nombre || !facultad) {
 			return res.status(400).json({ error: 'El nombre y la facultad son obligatorios.' });
+		}
+		if (coordenadas.error) {
+			return res.status(400).json({ error: coordenadas.error });
 		}
 		if (nombre.length > 100 || facultad.length > 100) {
 			return res.status(400).json({ error: 'El nombre y la facultad no pueden superar los 100 caracteres.' });
@@ -71,6 +95,7 @@ export const crearPuntoRetiro = async (req, res) => {
 			nombre,
 			facultad,
 			descripcion: typeof descripcion === 'string' ? descripcion.trim() || null : descripcion,
+			...coordenadas.datos,
 		});
 		return res.status(201).json({
 			message: 'Punto de retiro creado exitosamente.',
@@ -91,6 +116,12 @@ export const actualizarPuntoRetiro = async (req, res) => {
 		}
 
 		const datos = {};
+		const coordenadas = validarCoordenadas(req.body);
+		if (coordenadas.error) {
+			return res.status(400).json({ error: coordenadas.error });
+		}
+		Object.assign(datos, coordenadas.datos);
+
 		for (const campo of ['nombre', 'facultad']) {
 			if (req.body?.[campo] !== undefined) {
 				if (typeof req.body[campo] !== 'string' || !req.body[campo].trim()) {
