@@ -4,6 +4,21 @@ import {
 	actualizarCategoria as actualizarCategoriaService,
 	eliminarCategoria as eliminarCategoriaService,
 } from '../services/categorias.service.js';
+import {
+	actualizarCategoriaParamsSchema,
+	actualizarCategoriaSchema,
+	crearCategoriaSchema,
+	eliminarCategoriaParamsSchema,
+} from '../schemas/categorias.schema.js';
+
+const validar = (schema, datos, res) => {
+	const resultado = schema.safeParse(datos);
+	if (!resultado.success) {
+		res.status(400).json({ error: resultado.error.issues[0].message });
+		return null;
+	}
+	return resultado.data;
+};
 
 export const listarCategorias = async (_req, res) => {
 	try {
@@ -23,25 +38,11 @@ export const listarCategorias = async (_req, res) => {
 
 export const crearCategoria = async (req, res) => {
 	try {
-		// Limpia el nombre y usa una cadena vacía si falta o no es texto; la descripción se lee sin modificar.
-		const nombre = typeof req.body?.nombre === 'string' ? req.body.nombre.trim() : '';
-		const descripcion = req.body?.descripcion;
-
-		if (!nombre) {
-			return res.status(400).json({ error: 'El nombre de la categoría es obligatorio.' });
-		}
-
-		if (nombre.length > 80) {
-			return res.status(400).json({ error: 'El nombre no puede superar los 80 caracteres.' });
-		}
-
-		if (descripcion !== undefined && descripcion !== null && typeof descripcion !== 'string') {
-			return res.status(400).json({ error: 'La descripción debe ser texto.' });
-		}
+		const datos = validar(crearCategoriaSchema, req.body, res);
+		if (!datos) return;
 
 		const categoria = await crearCategoriaService({
-			nombre,
-			descripcion: typeof descripcion === 'string' ? descripcion.trim() || null : descripcion,
+			...datos,
 		});
 
 		return res.status(201).json({
@@ -58,37 +59,12 @@ export const crearCategoria = async (req, res) => {
 
 export const actualizarCategoria = async (req, res) => {
 	try {
-		const categoriaId = Number(req.params.id);//toma id de la categoria de la url y lo convierte a numero
-		if (!Number.isInteger(categoriaId) || categoriaId <= 0) {
-			return res.status(400).json({ error: 'El identificador de la categoría no es válido.' });
-		}
+		const parametros = validar(actualizarCategoriaParamsSchema, req.params, res);
+		if (!parametros) return;
+		const datos = validar(actualizarCategoriaSchema, req.body || {}, res);
+		if (!datos) return;
 
-		const datos = {};//objeto que contendra los datos a actualizar
-		if (req.body?.nombre !== undefined) {
-			if (typeof req.body.nombre !== 'string' || !req.body.nombre.trim()) {
-				return res.status(400).json({ error: 'El nombre debe ser texto y no puede estar vacío.' });
-			}
-
-			datos.nombre = req.body.nombre.trim();
-			if (datos.nombre.length > 80) {
-				return res.status(400).json({ error: 'El nombre no puede superar los 80 caracteres.' });
-			}
-		}
-
-		if (req.body?.descripcion !== undefined) {
-			const { descripcion } = req.body;
-			if (descripcion !== null && typeof descripcion !== 'string') {
-				return res.status(400).json({ error: 'La descripción debe ser texto.' });
-			}
-
-			datos.descripcion = typeof descripcion === 'string' ? descripcion.trim() || null : null;
-		}
-
-		if (Object.keys(datos).length === 0) { //obtine las llaves del objeto datos y si no hay ninguna, significa que no se proporcionaron datos para actualizar
-			return res.status(400).json({ error: 'Indica el nombre o la descripción para actualizar.' });
-		}
-
-		const categoria = await actualizarCategoriaService(categoriaId, datos);
+		const categoria = await actualizarCategoriaService(parametros.id, datos);
 		return res.status(200).json({
 			message: 'Categoría actualizada exitosamente.',
 			categoria,
@@ -103,12 +79,10 @@ export const actualizarCategoria = async (req, res) => {
 
 export const eliminarCategoria = async (req, res) => {
 	try {
-		const categoriaId = Number(req.params.id);
-		if (!Number.isInteger(categoriaId) || categoriaId <= 0) {
-			return res.status(400).json({ error: 'El identificador de la categoría no es válido.' });
-		}
+		const parametros = validar(eliminarCategoriaParamsSchema, req.params, res);
+		if (!parametros) return;
 
-		const categoria = await eliminarCategoriaService(categoriaId);
+		const categoria = await eliminarCategoriaService(parametros.id);
 		return res.status(200).json({
 			message: 'Categoría eliminada lógicamente.',
 			categoria,
