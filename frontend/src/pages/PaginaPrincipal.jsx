@@ -18,7 +18,6 @@ const secciones = [
   { label: 'Inicio', path: '/inicio', icon: House },
   { label: 'Objetos encontrados', path: '/app/objetos', icon: PackageSearch },
   { label: 'Mapa interactivo', path: '/app/mapa', icon: MapPin },
-  { label: 'Solicitudes', path: '/app/solicitudes', icon: ClipboardList },
   { label: 'Puntos de retiro', path: '/app/puntos-retiro', icon: Building2 },
   { label: 'Registrar entregas', path: '/funcionario/retiros', icon: ClipboardList, funcionario: true },
 ]

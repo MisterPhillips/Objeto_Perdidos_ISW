@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
-import { AlertCircle, MapPin, PackageCheck, PackageOpen, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { AlertCircle, ImagePlus, MapPin, PackageCheck, PackageOpen, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { apiRequest } from '../config/apiClient.js'
+import { apiRequest, apiRequestBlob } from '../config/apiClient.js'
 import { getSessionUser } from '../services/sessionService.js'
 
 const formatoFecha = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' })
@@ -9,6 +9,54 @@ const campoClase = 'h-10 rounded border border-[#cbd8df] bg-white px-3 text-sm f
 const obtenerIdObjeto = (id) => {
   const valor = Number(id)
   return Number.isSafeInteger(valor) && valor > 0 ? valor : null
+}
+
+function MarcoImagen({ src, alt, clase = '' }) {
+  return (
+    <div className={`relative aspect-[16/9] overflow-hidden rounded bg-[#e8eef1] ${clase}`}>
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 scale-110 bg-cover bg-center opacity-50 blur-md"
+        style={{ backgroundImage: `url("${src}")` }}
+      />
+      <img alt={alt} className="relative z-10 size-full object-contain" src={src} />
+    </div>
+  )
+}
+
+function ImagenObjeto({ objeto, clase = '' }) {
+  const [imagenCargada, setImagenCargada] = useState({ clave: '', url: '', error: '' })
+  const esFuncionario = getSessionUser()?.rol === 'FUNCIONARIO'
+  const clave = `${objeto?.id}:${objeto?.imagen}:${objeto?.objetoPrivado}:${esFuncionario}`
+
+  useEffect(() => {
+    if (!objeto?.imagen || (objeto.objetoPrivado && !esFuncionario)) return undefined
+
+    let vigente = true
+    let urlTemporal = ''
+    apiRequestBlob(`/objeto/${objeto.id}/imagen`)
+      .then((blob) => {
+        if (!vigente) return
+        urlTemporal = URL.createObjectURL(blob)
+        setImagenCargada({ clave, url: urlTemporal, error: '' })
+      })
+      .catch((requestError) => {
+        if (vigente) {
+          setImagenCargada({ clave, url: '', error: requestError.message || 'No se pudo cargar la imagen.' })
+        }
+      })
+
+    return () => {
+      vigente = false
+      if (urlTemporal) URL.revokeObjectURL(urlTemporal)
+    }
+  }, [objeto?.id, objeto?.imagen, objeto?.objetoPrivado, esFuncionario, clave])
+
+  if (!objeto?.imagen || (objeto.objetoPrivado && !esFuncionario)) return null
+  if (imagenCargada.clave !== clave) return null
+  if (imagenCargada.error) return <p className="m-0 rounded bg-[#fff5f4] p-3 text-xs text-[#963d38]" role="alert">{imagenCargada.error}</p>
+  if (!imagenCargada.url) return null
+  return <MarcoImagen alt={`Fotografía del objeto: ${objeto.descripcion || 'objeto encontrado'}`} clase={clase} src={imagenCargada.url} />
 }
 
 function PaginaObjetos() {
@@ -24,9 +72,29 @@ function PaginaObjetos() {
   const [guardando, setGuardando] = useState(false)
   const [errorFormulario, setErrorFormulario] = useState('')
   const [errorAccion, setErrorAccion] = useState('')
+  const [imagenArchivo, setImagenArchivo] = useState(null)
+  const [imagenPreview, setImagenPreview] = useState('')
+  const imagenPreviewRef = useRef('')
   const [intentos, setIntentos] = useState(0)
   const [formulario, setFormulario] = useState({ descripcion: '', categoriaId: '', puntoRetiroId: '', objetoPrivado: false })
   const esFuncionario = getSessionUser()?.rol === 'FUNCIONARIO'
+
+  useEffect(() => () => {
+    if (imagenPreviewRef.current) URL.revokeObjectURL(imagenPreviewRef.current)
+  }, [])
+
+  function limpiarImagenSeleccionada() {
+    if (imagenPreviewRef.current) URL.revokeObjectURL(imagenPreviewRef.current)
+    imagenPreviewRef.current = ''
+    setImagenPreview('')
+    setImagenArchivo(null)
+  }
+
+  function cerrarFormulario() {
+    if (guardando) return
+    setModalAbierto(false)
+    limpiarImagenSeleccionada()
+  }
 
   useEffect(() => {
     let vigente = true
@@ -62,6 +130,7 @@ function PaginaObjetos() {
 
   function abrirFormulario(objeto = null) {
     setErrorFormulario('')
+    limpiarImagenSeleccionada()
     if (objeto && !obtenerIdObjeto(objeto.id)) {
       setErrorAccion('No se puede editar este objeto porque no tiene un identificador válido.')
       return
@@ -88,17 +157,20 @@ function PaginaObjetos() {
     setErrorFormulario('')
 
     try {
+      const datos = new FormData()
+      datos.append('descripcion', formulario.descripcion.trim())
+      datos.append('categoriaId', String(Number(formulario.categoriaId)))
+      datos.append('puntoRetiroId', String(Number(formulario.puntoRetiroId)))
+      datos.append('objetoPrivado', String(formulario.objetoPrivado))
+      if (imagenArchivo) datos.append('imagen', imagenArchivo)
+
       const respuesta = await apiRequest(objetoId ? `/objeto/${objetoId}` : '/objeto', {
         method: objetoId ? 'PATCH' : 'POST',
-        body: JSON.stringify({
-          descripcion: formulario.descripcion.trim(),
-          categoriaId: Number(formulario.categoriaId),
-          puntoRetiroId: Number(formulario.puntoRetiroId),
-          objetoPrivado: formulario.objetoPrivado,
-        }),
+        body: datos,
       })
       setModalAbierto(false)
       setObjetoEditando(null)
+      limpiarImagenSeleccionada()
       setFormulario({ descripcion: '', categoriaId: '', puntoRetiroId: '', objetoPrivado: false })
       if (objetoId) {
         setObjetos((actuales) => actuales.map((objeto) => objeto.id === respuesta.objeto.id ? respuesta.objeto : objeto).filter((objeto) => !objeto.objetoPrivado))
@@ -177,6 +249,7 @@ function PaginaObjetos() {
         <div className="grid items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
           {objetos.map((objeto) => (
             <article className="rounded-md border border-[#dbe4e8] bg-white p-4" key={objeto.id}>
+              <ImagenObjeto clase="mb-4 w-full" objeto={objeto} />
               <div className="flex items-start gap-3">
                 <span className="grid size-9 shrink-0 place-items-center rounded-md bg-[#e9f4f8] text-[#16769c]">
                   <PackageOpen aria-hidden="true" size={18} />
@@ -213,20 +286,62 @@ function PaginaObjetos() {
       )}
 
       {modalAbierto && (
-        <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-[#132a38]/45 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget && !guardando) setModalAbierto(false) }}>
+        <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-[#132a38]/45 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) cerrarFormulario() }}>
           <section aria-labelledby="object-form-title" aria-modal="true" className="my-auto w-full max-w-lg rounded-md border border-[#dbe4e8] bg-white p-6 shadow-xl" role="dialog">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="m-0 text-[10px] font-bold uppercase text-[#1781a8]">OBJETOS ENCONTRADOS</p>
                 <h2 className="mb-0 mt-1 text-xl font-semibold text-[#193449]" id="object-form-title">{objetoEditando ? 'Editar objeto encontrado' : 'Registrar objeto perdido'}</h2>
               </div>
-              <button aria-label="Cerrar" className="grid size-8 place-items-center rounded border border-[#d5e0e5] text-[#526b79] hover:bg-[#f3f7f9] disabled:opacity-50" disabled={guardando} onClick={() => setModalAbierto(false)} type="button"><X size={16} /></button>
+              <button aria-label="Cerrar" className="grid size-8 place-items-center rounded border border-[#d5e0e5] text-[#526b79] hover:bg-[#f3f7f9] disabled:opacity-50" disabled={guardando} onClick={cerrarFormulario} type="button"><X size={16} /></button>
             </div>
             <form className="mt-5 grid gap-4" onSubmit={guardarObjeto}>
               <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
                 Descripción
                 <textarea className="min-h-24 resize-y rounded border border-[#cbd8df] px-3 py-2 text-sm font-normal outline-none focus:border-[#1781a8]" maxLength="150" onChange={(event) => setFormulario({ ...formulario, descripcion: event.target.value })} placeholder="Describe el objeto encontrado" required value={formulario.descripcion} />
               </label>
+              <div className="grid gap-2">
+                <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
+                  Fotografía (opcional)
+                  <span className="flex min-h-11 cursor-pointer items-center gap-2 rounded border border-dashed border-[#9fb5c1] bg-[#f7f9fa] px-3 text-sm font-medium text-[#31566a] hover:bg-[#eef5f7]">
+                    <ImagePlus aria-hidden="true" size={17} />
+                    {imagenArchivo ? 'Cambiar fotografía' : objetoEditando?.imagen ? 'Reemplazar fotografía actual' : 'Seleccionar fotografía'}
+                    <input
+                      accept="image/jpeg,image/png,image/webp"
+                      className="sr-only"
+                      onChange={(event) => {
+                        const archivo = event.target.files?.[0]
+                        if (!archivo) return
+                        const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp']
+                        if (!tiposPermitidos.includes(archivo.type)) {
+                          limpiarImagenSeleccionada()
+                          setErrorFormulario('La imagen debe estar en formato JPG, PNG o WebP.')
+                          event.target.value = ''
+                          return
+                        }
+                        if (archivo.size > 5 * 1024 * 1024) {
+                          limpiarImagenSeleccionada()
+                          setErrorFormulario('La imagen no puede superar los 5 MB.')
+                          event.target.value = ''
+                          return
+                        }
+                        setErrorFormulario('')
+                        if (imagenPreviewRef.current) URL.revokeObjectURL(imagenPreviewRef.current)
+                        imagenPreviewRef.current = URL.createObjectURL(archivo)
+                        setImagenPreview(imagenPreviewRef.current)
+                        setImagenArchivo(archivo)
+                      }}
+                      type="file"
+                    />
+                  </span>
+                </label>
+                <p className="m-0 text-xs font-normal text-[#718896]">JPG, PNG o WebP; máximo 5 MB. Se reduce y convierte a JPG al guardar.</p>
+                {imagenPreview ? (
+                  <MarcoImagen alt="Vista previa de la fotografía seleccionada" clase="w-full" src={imagenPreview} />
+                ) : objetoEditando?.imagen ? (
+                  <ImagenObjeto clase="w-full" objeto={objetoEditando} />
+                ) : null}
+              </div>
               <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
                 Categoría
                 <select className={campoClase} onChange={(event) => setFormulario({ ...formulario, categoriaId: event.target.value })} required value={formulario.categoriaId}>
@@ -250,12 +365,12 @@ function PaginaObjetos() {
                 />
                 <span>
                   <span className="block text-xs font-semibold text-[#405d6d]">Objeto privado</span>
-                  <span className="mt-1 block text-xs font-normal text-[#718896]">No aparecerá en el catálogo público ni en el mapa.</span>
+                  <span className="mt-1 block text-xs font-normal text-[#718896]">La descripción y la fotografía solo serán visibles para funcionarios.</span>
                 </span>
               </label>
               {errorFormulario && <p className="m-0 text-sm text-[#963d38]" role="alert">{errorFormulario}</p>}
               <div className="mt-1 flex justify-end gap-2">
-                <button className="rounded border border-[#cbd8df] px-4 py-2 text-sm font-semibold hover:bg-[#f3f7f9] disabled:opacity-50" disabled={guardando} onClick={() => setModalAbierto(false)} type="button">Cancelar</button>
+                <button className="rounded border border-[#cbd8df] px-4 py-2 text-sm font-semibold hover:bg-[#f3f7f9] disabled:opacity-50" disabled={guardando} onClick={cerrarFormulario} type="button">Cancelar</button>
                 <button className="rounded bg-[#0b4263] px-4 py-2 text-sm font-semibold text-white hover:bg-[#155779] disabled:opacity-60" disabled={guardando} type="submit">{guardando ? 'Guardando...' : objetoEditando ? 'Guardar cambios' : 'Registrar objeto'}</button>
               </div>
             </form>
