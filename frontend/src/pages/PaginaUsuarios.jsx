@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Pencil, Plus, Search, UserRound, UserRoundX, X } from 'lucide-react'
+import { ArrowLeft, LogOut, Pencil, Plus, Search, UserRound, UserRoundX, X } from 'lucide-react'
 import { ApiError, apiRequest } from '../config/apiClient.js'
 import { clearSession, getSessionUser } from '../services/sessionService.js'
 
@@ -19,28 +19,43 @@ function PaginaUsuarios() {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
-
-  async function cargarUsuarios() {
-    setCargando(true)
-    setError('')
-    try {
-      const data = await apiRequest('/usuarios')
-      setUsuarios(data.usuarios)
-    } catch (requestError) {
-      if (requestError instanceof ApiError && [401, 403].includes(requestError.status)) {
-        clearSession()
-        navigate('/login', { replace: true })
-        return
-      }
-      setError(requestError.message || 'No se pudo cargar la lista de usuarios.')
-    } finally {
-      setCargando(false)
-    }
-  }
+  const [intentos, setIntentos] = useState(0)
 
   useEffect(() => {
-    cargarUsuarios()
-  }, [])
+    let vigente = true
+
+    apiRequest('/usuarios')
+      .then((data) => {
+        if (vigente) setUsuarios(data.usuarios)
+      })
+      .catch((requestError) => {
+        if (!vigente) return
+        if (requestError instanceof ApiError && [401, 403].includes(requestError.status)) {
+          clearSession()
+          navigate('/login', { replace: true })
+          return
+        }
+        setError(requestError.message || 'No se pudo cargar la lista de usuarios.')
+      })
+      .finally(() => {
+        if (vigente) setCargando(false)
+      })
+
+    return () => {
+      vigente = false
+    }
+  }, [intentos, navigate])
+
+  function recargarUsuarios() {
+    setCargando(true)
+    setError('')
+    setIntentos((actuales) => actuales + 1)
+  }
+
+  function cerrarSesion() {
+    clearSession()
+    navigate('/login', { replace: true })
+  }
 
   function abrirCreacion() {
     setUsuarioEditando(null)
@@ -70,7 +85,7 @@ function PaginaUsuarios() {
       })
       setModalAbierto(false)
       setAviso(usuarioEditando ? 'Usuario actualizado.' : 'Usuario creado.')
-      await cargarUsuarios()
+      recargarUsuarios()
     } catch (requestError) {
       setError(requestError.message || 'No se pudo guardar el usuario.')
     } finally {
@@ -94,15 +109,10 @@ function PaginaUsuarios() {
         })
       }
       setAviso(usuario.activo ? 'Usuario desactivado.' : 'Usuario reactivado.')
-      await cargarUsuarios()
+      recargarUsuarios()
     } catch (requestError) {
       setError(requestError.message || 'No se pudo cambiar el estado del usuario.')
     }
-  }
-
-  function cerrarSesion() {
-    clearSession()
-    navigate('/login', { replace: true })
   }
 
   const usuariosFiltrados = usuarios.filter((usuario) =>
@@ -121,9 +131,14 @@ function PaginaUsuarios() {
               <p className="m-0 mt-0.5 text-sm font-semibold">Gestión de usuarios</p>
             </div>
           </div>
-          <button className="inline-flex items-center gap-2 rounded-md border border-[#cbd8df] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f3f7f9]" onClick={cerrarSesion} type="button">
-            <LogOut size={15} /> Cerrar sesión
-          </button>
+          <div className="flex items-center gap-2">
+            <button className="inline-flex items-center gap-2 rounded-md border border-[#cbd8df] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f3f7f9]" onClick={() => navigate('/inicio')} type="button">
+              <ArrowLeft size={15} /> Inicio
+            </button>
+            <button className="inline-flex items-center gap-2 rounded-md border border-[#cbd8df] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f3f7f9]" onClick={cerrarSesion} type="button">
+              <LogOut size={15} /> Cerrar sesión
+            </button>
+          </div>
         </div>
       </header>
 

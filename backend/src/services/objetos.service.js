@@ -1,5 +1,4 @@
 import prisma from '../config/prisma.js';
-const estadosObjeto = ['DISPONIBLE', 'ENTREGADO'];
 
 //////////////////// REGISTRAR OBJETO ////////////////////
 
@@ -63,7 +62,6 @@ export const obtenerCatalogo = async (filtros) => {
     estado: {
       in: ['DISPONIBLE'],
     },
-    objetoPrivado: false,
     puntoRetiro: {
       habilitado: true, //solo se muestran los objetos de puntos de retiro habilitados
     },
@@ -180,38 +178,3 @@ export const entregarObjeto = async (objetoId, datosRetiro, funcionarioId) => pr
     include: { categoria: true, puntoRetiro: true },
   });
 });
-
-//////////////////// ACTUALIZAR ESTADO ////////////////////
-
-export const cambiarEstadoObjeto = async (objetoId, estado) => {
-  if (!estadosObjeto.includes(estado)) {
-    const error = new Error('El estado indicado no es válido.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (estado === 'ENTREGADO') {
-    const error = new Error('La entrega debe registrarse desde el módulo de entregas.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const objeto = await prisma.objeto.findUnique({
-    where: { id: objetoId },
-  });
-
-  if (!objeto) {
-    const error = new Error('El objeto indicado no existe.');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  return prisma.objeto.update({
-    where: { id: objetoId },
-    data: { estado },
-    include: {
-      categoria: true,
-      puntoRetiro: true,
-    },
-  });
-};
