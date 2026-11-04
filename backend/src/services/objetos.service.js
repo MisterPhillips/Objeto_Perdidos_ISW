@@ -1,8 +1,9 @@
 import prisma from '../config/prisma.js';
+import { eliminarImagen, guardarImagen } from './imagenes.service.js';
 
 //////////////////// REGISTRAR OBJETO ////////////////////
 
-export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId, objetoPrivado = false, registradoPorId }) => {
+export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId, objetoPrivado = false, registradoPorId, archivoImagen }) => {
   const puntoRetiro = await prisma.puntoRetiro.findUnique({
     where: { id: puntoRetiroId },
   });
@@ -35,22 +36,33 @@ export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId,
     throw error;
   }
 
-  const nuevoObjeto = await prisma.objeto.create({
-    data: {
-      descripcion,
-      estado: 'DISPONIBLE',
-      categoriaId,
-      puntoRetiroId,
-      objetoPrivado,
-      registradoPorId,
-    },
-    include: {
-      categoria: true, //estos include permiten que al crear un objeto, se devuelvan también los datos de la categoría y del punto de retiro asociados a ese objeto
-      puntoRetiro: true,
-    },
-  });
-
-  return nuevoObjeto;
+  const imagen = archivoImagen ? await guardarImagen(archivoImagen) : null;
+  try {
+    return await prisma.objeto.create({
+      data: {
+        descripcion,
+        imagen,
+        estado: 'DISPONIBLE',
+        categoriaId,
+        puntoRetiroId,
+        objetoPrivado,
+        registradoPorId,
+      },
+      include: {
+        categoria: true,
+        puntoRetiro: true,
+      },
+    });
+  } catch (error) {
+    if (imagen) {
+      try {
+        await eliminarImagen(imagen);
+      } catch (errorLimpieza) {
+        console.error('No se pudo limpiar la imagen de un objeto que no se registró.', errorLimpieza);
+      }
+    }
+    throw error;
+  }
 };
 
 //////////////////// CATÁLOGO CONSOLIDADO ////////////////////
@@ -137,6 +149,42 @@ export const actualizarObjeto = async (objetoId, datos) => {
   });
 };
 
+export const actualizarImagenObjeto = async (objetoId, datos, archivoImagen) => {
+  const objeto = await prisma.objeto.findUnique({ where: { id: objetoId } });
+  if (!objeto) {
+    const error = new Error('El objeto indicado no existe.');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (objeto.estado === 'ENTREGADO') {
+    const error = new Error('No se puede editar un objeto que ya fue entregado.');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const imagenNueva = await guardarImagen(archivoImagen);
+  let objetoActualizado;
+  try {
+    objetoActualizado = await actualizarObjeto(objetoId, { ...datos, imagen: imagenNueva });
+  } catch (error) {
+    try {
+      await eliminarImagen(imagenNueva);
+    } catch (errorLimpieza) {
+      console.error('No se pudo limpiar una imagen cuyo cambio no se guardó.', errorLimpieza);
+    }
+    throw error;
+  }
+
+  if (objeto.imagen) {
+    try {
+      await eliminarImagen(objeto.imagen);
+    } catch (errorLimpieza) {
+      console.error('No se pudo eliminar la imagen anterior del objeto.', errorLimpieza);
+    }
+  }
+  return objetoActualizado;
+};
+
 export const eliminarObjeto = async (objetoId) => {
   const objeto = await prisma.objeto.findUnique({
     where: { id: objetoId },
@@ -146,7 +194,15 @@ export const eliminarObjeto = async (objetoId) => {
     error.statusCode = 404;
     throw error;
   }
-  return prisma.objeto.delete({ where: { id: objetoId } });
+  const eliminado = await prisma.objeto.delete({ where: { id: objetoId } });
+  if (objeto.imagen) {
+    try {
+      await eliminarImagen(objeto.imagen);
+    } catch (errorLimpieza) {
+      console.error('No se pudo eliminar la imagen de un objeto eliminado.', errorLimpieza);
+    }
+  }
+  return eliminado;
 };
 
 export const entregarObjeto = async (objetoId, datosRetiro, funcionarioId) => prisma.$transaction(async (tx) => {

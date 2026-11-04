@@ -1,0 +1,2 @@
+ALTER TABLE "objetos"
+ADD COLUMN "imagen" VARCHAR(255);
