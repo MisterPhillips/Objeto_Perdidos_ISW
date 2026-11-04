@@ -61,6 +61,8 @@ model PuntoRetiro {
   nombre     String   @unique @db.VarChar(100)
   facultad   String   @db.VarChar(100)
   descripcion String? @db.Text
+  latitud    Float?
+  longitud   Float?
   habilitado Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
