@@ -76,6 +76,7 @@ model PuntoRetiro {
 model Objeto {
   id              Int          @id @default(autoincrement())
   descripcion     String       @db.VarChar(150)
+  imagen          String?      @db.VarChar(255)
   estado          EstadoObjeto @default(DISPONIBLE)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
