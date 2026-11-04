@@ -7,16 +7,20 @@ const limitesCampus = [
 	[-36.827, -73.0177],
 	[-36.8193, -73.0063],
 ]
-const ubicacionObjeto = [-36.8229, -73.0134]
 
-const iconoObjeto = L.icon({
-	iconUrl: '/marcador-objeto.svg',
-	iconSize: [42, 50],
-	iconAnchor: [21, 48],
-	popupAnchor: [0, -44],
+const iconoPuntoRetiro = L.divIcon({
+	className: '',
+	html: '<span style="display:block;width:22px;height:22px;border:3px solid white;border-radius:50%;background:#0b4263;box-shadow:0 1px 5px #19344980"></span>',
+	iconSize: [22, 22],
+	iconAnchor: [11, 11],
+	popupAnchor: [0, -12],
 })
 
-function MapaCampus() {
+function MapaCampus({ puntosRetiro, onAbrirPunto }) {
+	const puntosConUbicacion = puntosRetiro.filter(
+		(punto) => Number.isFinite(punto.latitud) && Number.isFinite(punto.longitud),
+	)
+
 	return (
 		<section aria-label="Mapa del Campus Collao" className="mb-8 overflow-hidden rounded-lg border border-[#dbe4e8] bg-white">
 			<div className="border-b border-[#e7edef] px-4 py-4 sm:px-5">
@@ -28,14 +32,14 @@ function MapaCampus() {
 			</div>
 			<MapContainer
 				center={centroCampus}
-				className="h-[360px] w-full sm:h-[430px]"
+				className="h-[360px] w-full sm:h-[430px] relative z-0"
 				doubleClickZoom="center"
 				dragging 
 				keyboard={false}
 				maxBounds={limitesCampus}
 				maxBoundsViscosity={1}
 				maxZoom={19}
-				minZoom={15}
+				minZoom={16}
 				scrollWheelZoom="center"
 				touchZoom="center"
 				zoom={17}
@@ -45,17 +49,45 @@ function MapaCampus() {
 					maxZoom={19}
 					url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 				/>
-				<Marker icon={iconoObjeto} position={ubicacionObjeto}>
-					<Popup>
-						<div className="min-w-44">
-							<h3 className="m-0 text-sm font-semibold text-[#193449]">Mochila azul</h3>
-							<p className="mb-2 mt-1 text-xs text-[#526b79]">Mochila encontrada cerca de las dependencias del campus.</p>
-							<span className="inline-block rounded bg-[#e8f5ed] px-2 py-1 text-[10px] font-semibold text-[#24744e]">
-								Encontrado
-							</span>
-						</div>
-					</Popup>
-				</Marker>
+				{puntosConUbicacion.map((punto) => (
+					<Marker
+						icon={iconoPuntoRetiro}
+						key={punto.id}
+						position={[punto.latitud, punto.longitud]}
+						title={punto.nombre}
+					>
+						<Popup>
+							<div className="min-w-52">
+								<h3 className="m-0 text-sm font-semibold text-[#193449]">{punto.nombre}</h3>
+								<p className="m-0 mt-1 text-xs text-[#526b79]">{punto.facultad}</p>
+								{punto.descripcion && <p className="m-0 mt-2 text-xs text-[#526b79]">{punto.descripcion}</p>}
+								<p className="m-0 mt-2 text-[10px] font-semibold text-[#536d7c]">Objetos recientes ({punto.objetos.length} de 5)</p>
+								{punto.objetos.length === 0 ? (
+									<p className="m-0 mt-1 text-xs text-[#718896]">Aún no hay objetos registrados en este punto.</p>
+								) : (
+									<ul className="m-0 mt-1 list-disc pl-4 text-xs text-[#526b79]">
+										{punto.objetos.map((objeto) => (
+											<li key={objeto.id}>
+												{objeto.descripcion}
+												{objeto.categoria?.nombre ? ` · ${objeto.categoria.nombre}` : ''}
+											</li>
+										))}
+									</ul>
+								)}
+								<p className={`m-0 mt-2 text-[10px] font-semibold ${punto.habilitado ? 'text-[#24744e]' : 'text-[#687783]'}`}>
+									{punto.habilitado ? 'Activo' : 'Inactivo'}
+								</p>
+								<button
+									className="mt-2 rounded bg-[#0b4263] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#155779]"
+									onClick={() => onAbrirPunto(punto)}
+									type="button"
+								>
+									Ver todos los objetos
+								</button>
+							</div>
+						</Popup>
+					</Marker>
+				))}
 			</MapContainer>
 		</section>
 	)
