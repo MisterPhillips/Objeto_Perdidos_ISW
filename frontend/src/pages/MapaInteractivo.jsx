@@ -1,4 +1,4 @@
-import { AlertCircle, Building2, Clock3, MapPin, PackageOpen, Search, X } from 'lucide-react'
+import { AlertCircle, Building2, Clock3, MapPin, Search, X } from 'lucide-react'
 import MapaCampus from '../components/MapaCampus.jsx'
 import { useMapaInteractivo } from '../components/useMapaInteractivo.js'
 
@@ -27,111 +27,31 @@ function MapaInteractivo() {
 		reintentarDetalle,
 		buscarObjetos,
 	} = useMapaInteractivo()
+	const puntosConCoordenadas = puntosRetiro.filter(
+		(punto) => Number.isFinite(punto.latitud) && Number.isFinite(punto.longitud),
+	)
 
 	return (
 		<>
-			<MapaCampus />
-			<section aria-label="Puntos de retiro y objetos recientes" className="mt-7">
-			<div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-[#dbe4e8] pb-4">
-				<div>
-					  <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#658090]">UBICACIONES REGISTRADAS</p>
-					<p className="m-0 text-sm text-[#687f8d]">Cada punto muestra sus cinco objetos no privados más recientes.</p>
-				</div>
-				{!cargando && !error && (
-					<span className="text-xs font-semibold text-[#31566a]">
-						{puntosRetiro.length} {puntosRetiro.length === 1 ? 'punto de retiro' : 'puntos de retiro'}
-					</span>
+			<MapaCampus onAbrirPunto={abrirPunto} puntosRetiro={puntosRetiro} />
+			<section aria-label="Estado de los puntos de retiro en el mapa" className="mt-4">
+				{error && (
+					<div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#eccaca] bg-[#fff5f4] px-4 py-3 text-sm text-[#963d38]" role="alert">
+						<span className="flex items-center gap-2"><AlertCircle aria-hidden="true" size={17} />{error}</span>
+						<button className="rounded border border-[#dba9a4] px-3 py-1.5 text-xs font-semibold hover:bg-white" onClick={reintentar} type="button">Reintentar</button>
+					</div>
 				)}
-			</div>
-
-			{error && (
-				<div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#eccaca] bg-[#fff5f4] px-4 py-3 text-sm text-[#963d38]" role="alert">
-					<span className="flex items-center gap-2"><AlertCircle aria-hidden="true" size={17} />{error}</span>
-					<button className="rounded border border-[#dba9a4] px-3 py-1.5 text-xs font-semibold hover:bg-white" onClick={reintentar} type="button">Reintentar</button>
-				</div>
-			)}
-
-			{cargando && (
-				<div aria-label="Cargando puntos de retiro" className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3" role="status">
-					{[1, 2, 3].map((item) => (
-						<div className="animate-pulse rounded-md border border-[#dbe4e8] bg-white p-5" key={item}>
-							<div className="h-4 w-2/3 rounded bg-[#e7edef]" />
-							<div className="mt-3 h-3 w-1/2 rounded bg-[#edf1f3]" />
-							<div className="mt-5 h-32 rounded border border-[#edf1f3] bg-[#f7f9fa]" />
-						</div>
-					))}
-				</div>
-			)}
-
-			{!cargando && !error && puntosRetiro.length === 0 && (
-				<div className="rounded-md border border-dashed border-[#cbd8df] bg-white px-5 py-12 text-center">
-					<MapPin aria-hidden="true" className="mx-auto text-[#7b929f]" size={23} />
-					<p className="mb-0 mt-3 text-sm font-semibold text-[#31566a]">No hay puntos de retiro registrados.</p>
-				</div>
-			)}
-
-			{!cargando && !error && puntosRetiro.length > 0 && (
-				<div className="grid items-start gap-4 md:grid-cols-2 2xl:grid-cols-3">
-					{puntosRetiro.map((punto) => (
-						<article className="overflow-hidden rounded-md border border-[#dbe4e8] bg-white" key={punto.id}>
-							<header className="border-b border-[#e7edef]">
-								<button className="flex w-full items-start gap-3 px-4 py-4 text-left hover:bg-[#fbfcfc] focus-visible:outline-2 focus-visible:outline-[#1781a8]" onClick={() => abrirPunto(punto)} type="button">
-									<span className="grid size-9 shrink-0 place-items-center rounded-md bg-[#e9f4f8] text-[#16769c]">
-										<Building2 aria-hidden="true" size={18} />
-									</span>
-									<span className="min-w-0 flex-1">
-										<span className="block wrap-break-word text-sm font-semibold text-[#193449]">{punto.nombre}</span>
-										<span className="mt-1 block text-xs text-[#687f8d]">{punto.facultad}</span>
-										{punto.descripcion && <span className="mt-1 block wrap-break-word text-xs text-[#81929f]">{punto.descripcion}</span>}
-									</span>
-									<span className={`shrink-0 rounded px-2 py-1 text-[10px] font-semibold ${punto.habilitado ? 'bg-[#e8f5ed] text-[#24744e]' : 'bg-[#edf0f2] text-[#687783]'}`}>
-										{punto.habilitado ? 'Activo' : 'Inactivo'}
-									</span>
-								</button>
-							</header>
-
-							<section aria-label={`Últimos objetos en ${punto.nombre}`} className="m-3 rounded border border-[#dfe7eb] bg-[#f7f9fa] p-3">
-								<div className="mb-2 flex items-center justify-between gap-2">
-									<h3 className="m-0 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.04em] text-[#536d7c]">
-										<PackageOpen aria-hidden="true" size={15} /> Objetos recientes
-									</h3>
-									<span className="text-[10px] text-[#81929f]">{punto.objetos.length} de 5</span>
-								</div>
-
-								{punto.objetos.length === 0 ? (
-									<p className="m-0 rounded border border-dashed border-[#d5e0e5] bg-white px-3 py-4 text-center text-xs text-[#718896]">
-										Aún no hay objetos registrados en este punto.
-									</p>
-								) : (
-									<ul className="m-0 divide-y divide-[#e4eaed] rounded border border-[#e4eaed] bg-white p-0">
-										{punto.objetos.map((objeto) => {
-																	const estado = estadosObjeto[objeto.estado] || estadosObjeto.DISPONIBLE
-											return (
-												<li className="flex min-w-0 items-start justify-between gap-2 px-3 py-2.5" key={objeto.id}>
-													<div className="min-w-0">
-														<p className="m-0 wrap-break-word text-xs font-semibold text-[#31566a]">{objeto.descripcion}</p>
-														<p className="m-0 mt-1 flex items-center gap-1 text-[10px] text-[#81929f]">
-															<Clock3 aria-hidden="true" size={11} />
-															{formatoFecha.format(new Date(objeto.createdAt))}
-															{objeto.categoria?.nombre ? ` · ${objeto.categoria.nombre}` : ''}
-														</p>
-													</div>
-													<span className={`shrink-0 rounded px-1.5 py-1 text-[9px] font-semibold ${estado.className}`}>{estado.label}</span>
-												</li>
-											)
-										})}
-									</ul>
-								)}
-								<button className="mt-2 w-full rounded border border-[#cbd8df] bg-white px-3 py-2 text-xs font-semibold text-[#31566a] hover:bg-[#edf5f8]" onClick={() => abrirPunto(punto)} type="button">
-									Ver todos los objetos
-								</button>
-							</section>
-						</article>
-					))}
-				</div>
-
+				{cargando && <p className="m-0 text-sm text-[#687f8d]" role="status">Cargando puntos de retiro...</p>}
+				{!cargando && !error && puntosRetiro.length === 0 && (
+					<p className="m-0 flex items-center gap-2 text-sm text-[#687f8d]">
+						<MapPin aria-hidden="true" size={17} />No hay puntos de retiro registrados.
+					</p>
 				)}
-
+				{!cargando && !error && puntosRetiro.length > puntosConCoordenadas.length && (
+					<p className="m-0 text-sm text-[#687f8d]">
+						{puntosConCoordenadas.length} de {puntosRetiro.length} puntos aparecen en el mapa. Los demás aún no tienen latitud y longitud registradas.
+					</p>
+				)}
 				{puntoSeleccionado && (
 					<div className="fixed inset-0 z-50 grid place-items-center bg-[#102a3a]/55 p-3 sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) cerrarPunto() }}>
 						<section aria-labelledby="detalle-punto-titulo" aria-modal="true" className="flex max-h-[92dvh] w-full max-w-230 flex-col overflow-hidden rounded-lg border border-[#dbe4e8] bg-white shadow-2xl" onMouseDown={(event) => event.stopPropagation()} role="dialog">
