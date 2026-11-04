@@ -8,6 +8,7 @@ import {
   Menu,
   PackageSearch,
   Tags,
+  Users,
   X,
 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -24,6 +25,7 @@ const secciones = [
 
 const seccionesAdministracion = [
   { label: 'Categorías', path: '/admin/categorias', icon: Tags },
+  { label: 'Usuarios', path: '/admin/usuarios', icon: Users },
 ]
 
 function PaginaPrincipal({ children }) {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Pencil, Plus, Search, UserRound, UserRoundX, X } from 'lucide-react'
+import { ArrowLeft, LogOut, Pencil, Plus, Search, UserRound, UserRoundX, X } from 'lucide-react'
 import { ApiError, apiRequest } from '../config/apiClient.js'
 import { clearSession, getSessionUser } from '../services/sessionService.js'
 
@@ -131,9 +131,14 @@ function PaginaUsuarios() {
               <p className="m-0 mt-0.5 text-sm font-semibold">Gestión de usuarios</p>
             </div>
           </div>
-          <button className="inline-flex items-center gap-2 rounded-md border border-[#cbd8df] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f3f7f9]" onClick={cerrarSesion} type="button">
-            <LogOut size={15} /> Cerrar sesión
-          </button>
+          <div className="flex items-center gap-2">
+            <button className="inline-flex items-center gap-2 rounded-md border border-[#cbd8df] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f3f7f9]" onClick={() => navigate('/inicio')} type="button">
+              <ArrowLeft size={15} /> Inicio
+            </button>
+            <button className="inline-flex items-center gap-2 rounded-md border border-[#cbd8df] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f3f7f9]" onClick={cerrarSesion} type="button">
+              <LogOut size={15} /> Cerrar sesión
+            </button>
+          </div>
         </div>
       </header>
 
