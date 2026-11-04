@@ -1,6 +1,7 @@
 
 import {
   actualizarObjeto as actualizarObjetoService,
+  actualizarImagenObjeto as actualizarImagenObjetoService,
   eliminarObjeto as eliminarObjetoService,
   entregarObjeto as entregarObjetoService,
   registrarObjeto,
@@ -16,6 +17,8 @@ import {
   entregarObjetoSchema,
   usuarioObjetoIdSchema,
 } from '../schemas/objetos.schema.js';
+import { leerImagen } from '../services/imagenes.service.js';
+import prisma from '../config/prisma.js';
 
 const validar = (schema, datos, res, estado = 400) => {
   const resultado = schema.safeParse(datos);
@@ -40,6 +43,7 @@ export const crearObjeto = async (req, res) => {
       puntoRetiroId,
       objetoPrivado,
       registradoPorId,
+      archivoImagen: req.file,
     });
 
     return res.status(201).json({
@@ -60,11 +64,11 @@ export const listarObjetos = async (req, res) => {
   try {
     const objetos = await obtenerCatalogo(req.query);
 
-    const objetosVisibles = req.user.rol === 'ESTUDIANTE'?objetos.map((objeto) => (
-      objeto.objetoPrivado?{ ...objeto, descripcion: null }
+    const objetosVisibles = objetos.map((objeto) => (
+      req.user.rol === 'ESTUDIANTE' && objeto.objetoPrivado
+        ? { ...objeto, descripcion: null, imagen: null }
         : objeto
-    ))
-    : objetos;
+    ));
 
     return res.status(200).json({
       message: 'Catálogo obtenido exitosamente.',
@@ -94,10 +98,38 @@ export const actualizarObjeto = async (req, res) => {
     const datos = validar(actualizarObjetoSchema, req.body || {}, res);
     if (!datos) return;
 
-    const objeto = await actualizarObjetoService(parametros.id, datos);
+    const objeto = req.file
+      ? await actualizarImagenObjetoService(parametros.id, datos, req.file)
+      : await actualizarObjetoService(parametros.id, datos);
     return res.status(200).json({ message: 'Objeto actualizado exitosamente.', objeto });
   } catch (error) {
     return res.status(error.statusCode || 500).json({ error: error.message || 'Error interno del servidor.' });
+  }
+};
+
+export const obtenerImagenObjeto = async (req, res) => {
+  try {
+    const parametros = validar(actualizarObjetoParamsSchema, req.params, res);
+    if (!parametros) return;
+
+    const objeto = await prisma.objeto.findUnique({
+      where: { id: parametros.id },
+      select: { imagen: true, objetoPrivado: true },
+    });
+    if (!objeto?.imagen || (objeto.objetoPrivado && req.user.rol !== 'FUNCIONARIO')) {
+      return res.status(404).json({ error: 'La imagen no está disponible.' });
+    }
+
+    const imagen = await leerImagen(objeto.imagen);
+    return res
+      .type('image/jpeg')
+      .set('Cache-Control', 'private, no-store')
+      .send(imagen);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return res.status(404).json({ error: 'El archivo de imagen no está disponible.' });
+    }
+    return res.status(error.statusCode || 500).json({ error: error.message || 'No fue posible obtener la imagen.' });
   }
 };
 
@@ -125,4 +157,3 @@ export const entregarObjeto = async (req, res) => {
     return res.status(error.statusCode || 500).json({ error: error.message || 'Error interno del servidor.' });
   }
 };
-
