@@ -8,8 +8,8 @@ function CampoContrasena({ id, label, onChange, placeholder, value }) {
 
   return (
     <div>
-      <label className="mb-[6px] block text-xs font-medium text-[#334b5d]" htmlFor={id}>{label}</label>
-      <div className="flex h-[47px] items-center gap-[11px] rounded-xl border border-[#dce6ec] bg-white px-[13px] shadow-[0_4px_12px_rgb(20_49_70_/_5%)] transition-[border-color,box-shadow] focus-within:border-[#6ab5d9] focus-within:shadow-[0_0_0_3px_rgb(22_136_199_/_12%)]">
+      <label className="mb-1.5 block text-xs font-medium text-[#334b5d]" htmlFor={id}>{label}</label>
+      <div className="flex h-11.75 items-center gap-2.75 rounded-xl border border-[#dce6ec] bg-white px-3.25 shadow-[0_4px_12px_rgb(20_49_70/5%)] transition-[border-color,box-shadow] focus-within:border-[#6ab5d9] focus-within:shadow-[0_0_0_3px_rgb(22_136_199/12%)]">
         <LockKeyhole className="shrink-0 text-[#236b98]" size={17} aria-hidden="true" />
         <input
           autoComplete={id === 'password' ? 'new-password' : 'new-password'}
@@ -25,7 +25,7 @@ function CampoContrasena({ id, label, onChange, placeholder, value }) {
         />
         <button
           aria-label={isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-          className="flex shrink-0 items-center justify-center border-0 bg-transparent p-[5px] text-[#778b9a] hover:text-[#1688c7]"
+          className="flex shrink-0 items-center justify-center border-0 bg-transparent p-1.25 text-[#778b9a] hover:text-[#1688c7]"
           onClick={() => setIsVisible((visible) => !visible)}
           type="button"
         >
@@ -75,16 +75,16 @@ function FormularioRegistro() {
   return (
     <section
       aria-labelledby="register-title"
-      className="mx-auto my-auto w-full max-w-[574px] rounded-[20px] border border-[#edf1f4] bg-white px-[32px] pt-[27px] pb-[21px] shadow-[0_18px_45px_rgb(24_50_71_/_9%)] max-[900px]:px-[27px] max-[680px]:my-[30px] max-[680px]:px-[25px] max-[680px]:pt-[25px] max-[680px]:pb-[23px] max-[380px]:px-[19px]"
+      className="mx-auto my-auto w-full max-w-143.5 rounded-[20px] border border-[#edf1f4] bg-white px-8 pt-6.75 pb-5.25 shadow-[0_18px_45px_rgb(24_50_71/9%)] max-[900px]:px-6.75 max-[680px]:my-7.5 max-[680px]:px-6.25 max-[680px]:pt-6.25 max-[680px]:pb-5.75 max-[380px]:px-4.75"
     >
-      <p className="mb-[6px] text-[10px] font-bold uppercase text-[#1688c7]">FINDUBB</p>
+      <p className="mb-1.5 text-[10px] font-bold uppercase text-[#1688c7]">FINDUBB</p>
       <h2 className="m-0 text-[28px] font-medium leading-[1.2] text-[#183247]" id="register-title">Crear cuenta</h2>
-      <p className="mb-5 mt-[7px] text-[13px] text-[#8293a0]">Únete a FINDUBB y conecta con tu vida universitaria.</p>
+      <p className="mb-5 mt-1.75 text-[13px] text-[#8293a0]">Únete a FINDUBB y conecta con tu vida universitaria.</p>
 
-      <form className="grid gap-[14px]" onSubmit={handleSubmit}>
+      <form className="grid gap-3.5" onSubmit={handleSubmit}>
         <div>
-          <label className="mb-[6px] block text-xs font-medium text-[#334b5d]" htmlFor="nombre">Nombre completo</label>
-          <div className="flex h-[47px] items-center gap-[11px] rounded-xl border border-[#dce6ec] bg-white px-[13px] shadow-[0_4px_12px_rgb(20_49_70_/_5%)] transition-[border-color,box-shadow] focus-within:border-[#6ab5d9] focus-within:shadow-[0_0_0_3px_rgb(22_136_199_/_12%)]">
+          <label className="mb-1.5 block text-xs font-medium text-[#334b5d]" htmlFor="nombre">Nombre completo</label>
+          <div className="flex h-11.75 items-center gap-2.75 rounded-xl border border-[#dce6ec] bg-white px-3.25 shadow-[0_4px_12px_rgb(20_49_70/5%)] transition-[border-color,box-shadow] focus-within:border-[#6ab5d9] focus-within:shadow-[0_0_0_3px_rgb(22_136_199/12%)]">
             <UserRound className="shrink-0 text-[#236b98]" size={17} aria-hidden="true" />
             <input
               autoComplete="name"
@@ -100,8 +100,8 @@ function FormularioRegistro() {
         </div>
 
         <div>
-          <label className="mb-[6px] block text-xs font-medium text-[#334b5d]" htmlFor="correo">Correo institucional</label>
-          <div className="flex h-[47px] items-center gap-[11px] rounded-xl border border-[#dce6ec] bg-white px-[13px] shadow-[0_4px_12px_rgb(20_49_70_/_5%)] transition-[border-color,box-shadow] focus-within:border-[#6ab5d9] focus-within:shadow-[0_0_0_3px_rgb(22_136_199_/_12%)]">
+          <label className="mb-1.5 block text-xs font-medium text-[#334b5d]" htmlFor="correo">Correo institucional</label>
+          <div className="flex h-11.75 items-center gap-2.75 rounded-xl border border-[#dce6ec] bg-white px-3.25 shadow-[0_4px_12px_rgb(20_49_70/5%)] transition-[border-color,box-shadow] focus-within:border-[#6ab5d9] focus-within:shadow-[0_0_0_3px_rgb(22_136_199/12%)]">
             <Mail className="shrink-0 text-[#236b98]" size={17} aria-hidden="true" />
             <input
               autoComplete="email"
@@ -117,7 +117,7 @@ function FormularioRegistro() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-[14px] min-[681px]:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3.5 min-[681px]:grid-cols-2">
           <CampoContrasena
             id="password"
             label="Contraseña"
@@ -134,7 +134,7 @@ function FormularioRegistro() {
           />
         </div>
 
-        <button className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#24516e] bg-[#073252] text-[13px] font-semibold text-white shadow-[0_6px_14px_rgb(7_50_82_/_16%)] transition hover:-translate-y-px hover:bg-[#0d4268] disabled:cursor-wait disabled:opacity-[.78]" disabled={isSubmitting} type="submit">
+        <button className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#24516e] bg-[#073252] text-[13px] font-semibold text-white shadow-[0_6px_14px_rgb(7_50_82/16%)] transition hover:-translate-y-px hover:bg-[#0d4268] disabled:cursor-wait disabled:opacity-[.78]" disabled={isSubmitting} type="submit">
           {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
           {!isSubmitting && <UserRoundPlus size={17} aria-hidden="true" />}
         </button>
@@ -146,7 +146,7 @@ function FormularioRegistro() {
         )}
       </form>
 
-      <hr className="mb-[14px] mt-4 h-px border-0 bg-[#e5ebef]" />
+      <hr className="mb-3.5 mt-4 h-px border-0 bg-[#e5ebef]" />
       <p className="m-0 text-center text-xs text-[#81929f]">
         ¿Ya tienes una cuenta?{' '}
         <Link className="font-semibold text-[#1688c7] no-underline hover:text-[#096da8] hover:underline" to="/login">Inicia sesión</Link>

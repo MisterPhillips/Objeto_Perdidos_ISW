@@ -8,6 +8,7 @@ import PaginaRegistro from './pages/PaginaRegistro.jsx'
 import PaginaRetiros from './pages/PaginaRetiros.jsx'
 import PaginaCategorias from './pages/PaginaCategorias.jsx'
 import PaginaUsuarios from './pages/PaginaUsuarios.jsx'
+import PaginaCrearPuntoRetiro from './pages/PaginaCrearPuntoRetiro.jsx'
 import { getSessionToken, getSessionUser } from './services/sessionService.js'
 
 function RutaAdministrador({ children }) {
@@ -43,6 +44,7 @@ function App() {
         <Route element={<PaginaRegistro />} path="/registro" />
         <Route element={<RutaAdministrador><PaginaPrincipal><PaginaCategorias /></PaginaPrincipal></RutaAdministrador>} path="/admin/categorias" />
         <Route element={<RutaAdministrador><PaginaUsuarios /></RutaAdministrador>} path="/admin/usuarios" />
+        <Route element={<RutaAdministrador><PaginaPrincipal><PaginaCrearPuntoRetiro /></PaginaPrincipal></RutaAdministrador>} path="/admin/puntos-retiro/nuevo" />
         <Route element={<RutaFuncionario><PaginaPrincipal><PaginaRetiros /></PaginaPrincipal></RutaFuncionario>} path="/funcionario/retiros" />
         <Route element={<RutaAutenticada><PaginaPrincipal><PaginaInicio /></PaginaPrincipal></RutaAutenticada>} path="/inicio" />
         <Route element={<RutaAutenticada><PaginaPrincipal><MapaInteractivo /></PaginaPrincipal></RutaAutenticada>} path="/app/mapa" />

@@ -32,7 +32,7 @@ function MapaCampus({ puntosRetiro, onAbrirPunto }) {
 			</div>
 			<MapContainer
 				center={centroCampus}
-				className="h-[360px] w-full sm:h-[430px] relative z-0"
+				className="h-90 w-full sm:h-107.5 relative z-0"
 				doubleClickZoom="center"
 				dragging 
 				keyboard={false}
