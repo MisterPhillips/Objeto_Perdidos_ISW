@@ -8,6 +8,7 @@ import {
   Menu,
   PackageSearch,
   Tags,
+  Users,
   X,
 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -17,13 +18,13 @@ const secciones = [
   { label: 'Inicio', path: '/inicio', icon: House },
   { label: 'Objetos encontrados', path: '/app/objetos', icon: PackageSearch },
   { label: 'Mapa interactivo', path: '/app/mapa', icon: MapPin },
-  { label: 'Solicitudes', path: '/app/solicitudes', icon: ClipboardList },
   { label: 'Puntos de retiro', path: '/app/puntos-retiro', icon: Building2 },
   { label: 'Registrar entregas', path: '/funcionario/retiros', icon: ClipboardList, funcionario: true },
 ]
 
 const seccionesAdministracion = [
   { label: 'Categorías', path: '/admin/categorias', icon: Tags },
+  { label: 'Usuarios', path: '/admin/usuarios', icon: Users },
   { label: 'Agregar punto de retiro', path: '/admin/puntos-retiro/nuevo', icon: Building2 },
 ]
 
