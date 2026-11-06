@@ -183,7 +183,7 @@ function PaginaRetiros() {
             <div className="py-10 text-center text-sm text-[#687f8d]"><PackageOpen className="mx-auto mb-2 text-[#7b929f]" size={24} />Aún no hay entregas registradas.</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[620px] border-collapse text-left text-xs">
+              <table className="w-full min-w-155 border-collapse text-left text-xs">
                 <thead><tr className="border-b border-[#dbe4e8] text-[#658090]"><th className="px-3 py-2 font-semibold">Objeto</th><th className="px-3 py-2 font-semibold">Retirante</th><th className="px-3 py-2 font-semibold">Contacto</th><th className="px-3 py-2 font-semibold">Fecha</th></tr></thead>
                 <tbody>{retiros.map((retiro) => <tr className="border-b border-[#edf2f4] text-[#31566a]" key={retiro.id}><td className="px-3 py-3 font-semibold">{retiro.objeto?.descripcion}</td><td className="px-3 py-3">{retiro.nombreRetirante}<br /><span className="text-[#81929f]">{retiro.rutRetirante}</span></td><td className="px-3 py-3">{retiro.correoRetirante}</td><td className="px-3 py-3 whitespace-nowrap">{formatoFecha.format(new Date(retiro.fechaRetiro))}</td></tr>)}</tbody>
               </table>
