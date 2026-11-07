@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { normalizarRutChileno, rutChilenoValido } from '../utils/rut.js'
 
 const identificador = (mensaje) => z.coerce
   .number({ error: mensaje })
@@ -33,8 +34,10 @@ export const crearDocumentoSchema = z.object({
   nombrePropietario: textoObligatorio('nombrePropietario', 100),
   rutPropietario: z.preprocess(
     (valor) => typeof valor === 'string' && !valor.trim() ? undefined : valor,
-    z.string().trim().max(20).optional(),
-  ),
+      z.string().trim().max(20).refine(rutChilenoValido, {
+          error: 'Ingresa un RUT válido, por ejemplo 12.345.678-5.',
+        }).transform(normalizarRutChileno).optional(),
+    ),
   descripcion: z.string().trim().min(1).max(150),
   puntoRetiroId: identificador('El identificador del punto de retiro no es válido.'),
 });
@@ -43,7 +46,9 @@ export const actualizarDocumentoSchema = z.object({
   nombrePropietario: textoObligatorio('nombrePropietario', 100),
   rutPropietario: z.preprocess(
     (valor) => typeof valor === 'string' && !valor.trim() ? null : valor,
-    z.string().trim().max(20).nullable().optional(),
+    z.string().trim().max(20).refine(rutChilenoValido, {
+        error: 'Ingresa un RUT válido, por ejemplo 12.345.678-5.',
+      }).transform(normalizarRutChileno).nullable().optional(),
   ),
   descripcion: z.string({ error: 'La descripción es obligatoria y no puede superar los 150 caracteres.' })
     .trim()
