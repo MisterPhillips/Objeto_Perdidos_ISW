@@ -84,6 +84,14 @@ function PaginaObjetos() {
   const [guardandoDocumento, setGuardandoDocumento] = useState(false)
   const [errorDocumento, setErrorDocumento] = useState('')
 
+   // Constantes para validar si se puede registrar un objeto o documento
+  const normalizarNombreCategoria = (nombre) => nombre.trim().toLocaleLowerCase('es')
+  const categoriasObjetoComun = categorias.filter(
+    (categoria) => normalizarNombreCategoria(categoria.nombre) !== 'documento personal',
+  )
+  const puedeRegistrar = esFuncionario && categoriasObjetoComun.length > 0 && puntosRetiro.length > 0
+
+
   useEffect(() => () => {
     if (imagenPreviewRef.current) URL.revokeObjectURL(imagenPreviewRef.current)
   }, [])
@@ -286,7 +294,6 @@ function PaginaObjetos() {
     }
   }
 
-  const puedeRegistrar = esFuncionario && categorias.length > 0 && puntosRetiro.length > 0
 
   return (
     <section aria-label="Objetos encontrados" className="mt-7">
@@ -450,7 +457,7 @@ function PaginaObjetos() {
                 Categoría
                 <select className={campoClase} onChange={(event) => setFormulario({ ...formulario, categoriaId: event.target.value })} required value={formulario.categoriaId}>
                   <option value="">Selecciona una categoría</option>
-                  {categorias.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>)}
+                  {categoriasObjetoComun.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>)}
                 </select>
               </label>
               <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
