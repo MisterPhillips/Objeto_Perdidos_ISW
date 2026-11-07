@@ -65,6 +65,57 @@ export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId,
   }
 };
 
+export const registrarDocumento = async ({
+  nombrePropietario,
+  rutPropietario,
+  descripcion,
+  puntoRetiroId,
+  registradoPorId,
+}) => {
+  const puntoRetiro = await prisma.puntoRetiro.findUnique({
+    where: { id: puntoRetiroId },
+  });
+
+  if (!puntoRetiro) {
+    const error = new Error('El punto de retiro indicado no existe.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (!puntoRetiro.habilitado) {
+    const error = new Error('El punto de retiro indicado no está habilitado.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const categoria = await prisma.categoria.findUnique({
+    where: { nombre: 'Documento personal' },
+  });
+
+  if (!categoria?.activa) {
+    const error = new Error('Debe existir una categoría activa llamada "Documento personal".');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return prisma.objeto.create({
+    data: {
+      descripcion,
+      nombrePropietario,
+      rutPropietario: rutPropietario || null,
+      estado: 'DISPONIBLE',
+      objetoPrivado: false,
+      categoriaId: categoria.id,
+      puntoRetiroId,
+      registradoPorId,
+    },
+    include: {
+      categoria: true,
+      puntoRetiro: true,
+    },
+  });
+};
+
 //////////////////// CATÁLOGO CONSOLIDADO ////////////////////
 
 export const obtenerCatalogo = async (filtros) => {

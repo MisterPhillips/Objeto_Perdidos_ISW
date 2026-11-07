@@ -81,6 +81,8 @@ model Objeto {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   objetoPrivado   Boolean      @default(false)
+  nombrePropietario String?    @db.VarChar(100)
+  rutPropietario    String?    @db.VarChar(20)
   
 
   categoriaId     Int
