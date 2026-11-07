@@ -3,6 +3,7 @@ import { AlertCircle, ImagePlus, MapPin, PackageCheck, PackageOpen, Pencil, Plus
 import { useNavigate } from 'react-router-dom'
 import { apiRequest, apiRequestBlob } from '../config/apiClient.js'
 import { getSessionUser } from '../services/sessionService.js'
+import { formatearRut } from '../utils/rut.js'
 
 const formatoFecha = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' })
 const campoClase = 'h-10 rounded border border-[#cbd8df] bg-white px-3 text-sm font-normal outline-none focus:border-[#1781a8]'
@@ -366,7 +367,7 @@ function PaginaObjetos() {
             {esFuncionario && (objeto.nombrePropietario || objeto.rutPropietario) && (
               <p className="mb-0 mt-2 text-xs text-[#536d7c]">
                 Propietario: {objeto.nombrePropietario}
-                {objeto.rutPropietario && ` · RUT: ${objeto.rutPropietario}`}
+                {objeto.rutPropietario && ` · RUT: ${formatearRut(objeto.rutPropietario)}`}
               </p>
             )}
 
@@ -526,7 +527,9 @@ function PaginaObjetos() {
                   autoComplete="off"
                   className={campoClase}
                   maxLength="20"
-                  onChange={(event) => setFormularioDocumento({ ...formularioDocumento, rutPropietario: event.target.value })}
+                  onChange={(event) => setFormularioDocumento({ ...formularioDocumento, rutPropietario: formatearRut(event.target.value)})}
+                  pattern="[0-9]{1,2}\.?[0-9]{3}\.?[0-9]{3}-[0-9Kk]"
+                  placeholder="12.345.678-5"
                   value={formularioDocumento.rutPropietario}
                 />
               </label>

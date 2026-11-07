@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AlertCircle, CheckCircle2, ClipboardCheck, History, PackageOpen, RefreshCw } from 'lucide-react'
 import { apiRequest } from '../config/apiClient.js'
+import { formatearRut } from '../utils/rut.js'
 
 const campoClase = 'h-10 w-full rounded border border-[#cbd8df] bg-white px-3 text-sm outline-none focus:border-[#1781a8]'
 const formatoFecha = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium', timeStyle: 'short' })
@@ -10,17 +11,6 @@ const formularioInicial = {
   rutRetirante: '',
   correoRetirante: '',
   identidadVerificada: false,
-}
-
-function formatearRut(valor) {
-  const limpio = valor.replace(/[^0-9kK]/g, '').toUpperCase().slice(0, 9)
-
-  if (limpio.length < 8) return limpio
-
-  const cuerpo = limpio.slice(0, -1)
-  const digitoVerificador = limpio.slice(-1)
-  const cuerpoConPuntos = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-  return `${cuerpoConPuntos}-${digitoVerificador}`
 }
 
 function PaginaRetiros() {
