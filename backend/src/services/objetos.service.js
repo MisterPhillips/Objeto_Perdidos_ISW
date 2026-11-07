@@ -36,6 +36,12 @@ export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId,
     throw error;
   }
 
+  if (categoria.nombre === 'Documento personal') {
+    const error = new Error('La categoría "Documento personal" solo se asigna al registrar documentos.');
+    error.statusCode = 400;
+    throw error;
+  }
+
   const imagen = archivoImagen ? await guardarImagen(archivoImagen) : null;
   try {
     return await prisma.objeto.create({
@@ -210,22 +216,46 @@ export const obtenerObjetosGestion = async () => prisma.objeto.findMany({
 });
 
 export const actualizarObjeto = async (objetoId, datos) => {
-  const objeto = await prisma.objeto.findUnique({ where: { id: objetoId } });
+  const objeto = await prisma.objeto.findUnique({
+    where: { id: objetoId },
+    include: { categoria: { select: { nombre: true } } },
+  });
+
   if (!objeto) {
     const error = new Error('El objeto indicado no existe.');
     error.statusCode = 404;
     throw error;
   }
+
   if (objeto.estado === 'ENTREGADO') {
     const error = new Error('No se puede editar un objeto que ya fue entregado.');
     error.statusCode = 409;
     throw error;
   }
 
+  if (objeto.categoria.nombre === 'Documento personal') {
+    if (datos.categoriaId !== undefined && datos.categoriaId !== objeto.categoriaId) {
+      const error = new Error('La categoría de un documento personal no se puede cambiar.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (datos.objetoPrivado === true) {
+      const error = new Error('Un documento personal no puede marcarse como privado.');
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
   if (datos.categoriaId !== undefined) {
     const categoria = await prisma.categoria.findUnique({ where: { id: datos.categoriaId } });
     if (!categoria || !categoria.activa) {
       const error = new Error('La categoría indicada no existe o está inactiva.');
+      error.statusCode = 400;
+      throw error;
+    }
+    if (categoria.nombre === 'Documento personal') {
+      const error = new Error('La categoría "Documento personal" solo se asigna al registrar documentos.');
       error.statusCode = 400;
       throw error;
     }
@@ -247,15 +277,26 @@ export const actualizarObjeto = async (objetoId, datos) => {
 };
 
 export const actualizarImagenObjeto = async (objetoId, datos, archivoImagen) => {
-  const objeto = await prisma.objeto.findUnique({ where: { id: objetoId } });
+  const objeto = await prisma.objeto.findUnique({
+    where: { id: objetoId },
+    include: { categoria: { select: { nombre: true } } },
+  });
+
   if (!objeto) {
     const error = new Error('El objeto indicado no existe.');
     error.statusCode = 404;
     throw error;
   }
+  
   if (objeto.estado === 'ENTREGADO') {
     const error = new Error('No se puede editar un objeto que ya fue entregado.');
     error.statusCode = 409;
+    throw error;
+  }
+
+  if (objeto.categoria.nombre === 'Documento personal') {
+    const error = new Error('Un documento personal no puede tener una fotografía.');
+    error.statusCode = 400;
     throw error;
   }
 
