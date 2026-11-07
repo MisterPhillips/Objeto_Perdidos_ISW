@@ -5,6 +5,7 @@ import {
   eliminarObjeto as eliminarObjetoService,
   entregarObjeto as entregarObjetoService,
   registrarObjeto,
+  registrarDocumento,
   obtenerCatalogo,
   obtenerObjetosGestion,
 } from '../services/objetos.service.js';
@@ -16,6 +17,7 @@ import {
   entregarObjetoParamsSchema,
   entregarObjetoSchema,
   usuarioObjetoIdSchema,
+  crearDocumentoSchema,
 } from '../schemas/objetos.schema.js';
 import { leerImagen } from '../services/imagenes.service.js';
 import prisma from '../config/prisma.js';
@@ -58,17 +60,43 @@ export const crearObjeto = async (req, res) => {
   }
 };
 
+export const crearDocumento = async (req, res) => {
+  try {
+    const datos = validar(crearDocumentoSchema, req.body, res);
+    if (!datos) return;
+
+    const registradoPorId = validar(usuarioObjetoIdSchema, req.user?.id, res, 401);
+    if (!registradoPorId) return;
+
+    const objeto = await registrarDocumento({ ...datos, registradoPorId });
+
+    return res.status(201).json({
+      message: 'Documento registrado exitosamente.',
+      objeto,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      error: error.message || 'Error interno del servidor.',
+    });
+  }
+};
+
 //////////////////// CATÁLOGO ////////////////////
 
 export const listarObjetos = async (req, res) => {
   try {
     const objetos = await obtenerCatalogo(req.query);
 
-    const objetosVisibles = objetos.map((objeto) => (
-      req.user.rol === 'ESTUDIANTE' && objeto.objetoPrivado
+    const objetosVisibles = objetos.map((objeto) => {
+      const objetoVisible = req.user.rol === 'ESTUDIANTE' && objeto.objetoPrivado
         ? { ...objeto, descripcion: null, imagen: null }
-        : objeto
-    ));
+        : objeto;
+
+      if (req.user.rol === 'FUNCIONARIO') return objetoVisible;
+
+      const { nombrePropietario, rutPropietario, ...objetoSinDatosPropietario } = objetoVisible;
+      return objetoSinDatosPropietario;
+    });
 
     return res.status(200).json({
       message: 'Catálogo obtenido exitosamente.',
