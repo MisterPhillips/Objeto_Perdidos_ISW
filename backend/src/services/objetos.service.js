@@ -116,6 +116,52 @@ export const registrarDocumento = async ({
   });
 };
 
+export const actualizarDocumento = async (objetoId, datos) => {
+  const objeto = await prisma.objeto.findUnique({
+    where: { id: objetoId },
+    include: { categoria: { select: { nombre: true } } },
+  });
+
+  if (!objeto) {
+    const error = new Error('El objeto indicado no existe.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (objeto.categoria.nombre !== 'Documento personal') {
+    const error = new Error('El objeto indicado no es un documento personal.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (objeto.estado === 'ENTREGADO') {
+    const error = new Error('No se puede editar un documento que ya fue entregado.');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const puntoRetiro = await prisma.puntoRetiro.findUnique({
+    where: { id: datos.puntoRetiroId },
+  });
+
+  if (!puntoRetiro || !puntoRetiro.habilitado) {
+    const error = new Error('El punto de retiro indicado no existe o está deshabilitado.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return prisma.objeto.update({
+    where: { id: objetoId },
+    data: {
+      nombrePropietario: datos.nombrePropietario,
+      rutPropietario: datos.rutPropietario,
+      descripcion: datos.descripcion,
+      puntoRetiroId: datos.puntoRetiroId,
+    },
+    include: { categoria: true, puntoRetiro: true },
+  });
+};
+
 //////////////////// CATÁLOGO CONSOLIDADO ////////////////////
 
 export const obtenerCatalogo = async (filtros) => {
