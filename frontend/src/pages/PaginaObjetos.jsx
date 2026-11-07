@@ -79,6 +79,7 @@ function PaginaObjetos() {
   const [formulario, setFormulario] = useState({ descripcion: '', categoriaId: '', puntoRetiroId: '', objetoPrivado: false })
   const esFuncionario = getSessionUser()?.rol === 'FUNCIONARIO'
   const [documentoModalAbierto, setDocumentoModalAbierto] = useState(false)
+  const [documentoEditando, setDocumentoEditando] = useState(null)
   const [formularioDocumento, setFormularioDocumento] = useState({ nombrePropietario: '', rutPropietario: '', descripcion: '', puntoRetiroId: '' })
   const [guardandoDocumento, setGuardandoDocumento] = useState(false)
   const [errorDocumento, setErrorDocumento] = useState('')
@@ -98,6 +99,14 @@ function PaginaObjetos() {
     if (guardando) return
     setModalAbierto(false)
     limpiarImagenSeleccionada()
+  }
+
+  function cerrarFormularioDocumento() {
+    if (guardandoDocumento) return
+    setDocumentoModalAbierto(false)
+    setDocumentoEditando(null)
+    setFormularioDocumento({ nombrePropietario: '', rutPropietario: '', descripcion: '', puntoRetiroId: '' })
+    setErrorDocumento('')
   }
 
   useEffect(() => {
@@ -149,6 +158,37 @@ function PaginaObjetos() {
     setModalAbierto(true)
   }
 
+  function abrirFormularioDocumento(objeto = null) {
+    setErrorDocumento('')
+    if (objeto && !obtenerIdObjeto(objeto.id)) {
+      setErrorAccion('No se puede editar este documento porque no tiene un identificador válido.')
+      return
+    }
+
+    setDocumentoEditando(objeto)
+    setFormularioDocumento(objeto ? {
+      nombrePropietario: objeto.nombrePropietario || '',
+      rutPropietario: objeto.rutPropietario || '',
+      descripcion: objeto.descripcion || '',
+      puntoRetiroId: String(objeto.puntoRetiroId),
+    } : {
+      nombrePropietario: '',
+      rutPropietario: '',
+      descripcion: '',
+      puntoRetiroId: '',
+    })
+    setDocumentoModalAbierto(true)
+  }
+
+  function abrirEdicion(objeto) {
+    if (objeto.categoria?.nombre === 'Documento personal') {
+      abrirFormularioDocumento(objeto)
+      return
+    }
+
+    abrirFormulario(objeto)
+  }
+
   async function guardarObjeto(event) {
     event.preventDefault()
     const objetoId = objetoEditando ? obtenerIdObjeto(objetoEditando.id) : null
@@ -194,33 +234,41 @@ function PaginaObjetos() {
     event.preventDefault()
     setGuardandoDocumento(true)
     setErrorDocumento('')
+    const esEdicion = documentoEditando !== null
 
     try {
-      await apiRequest('/objeto/documento', {
-        method: 'POST',
-        body: JSON.stringify({
-          nombrePropietario: formularioDocumento.nombrePropietario.trim(),
-          rutPropietario: formularioDocumento.rutPropietario.trim(),
-          descripcion: formularioDocumento.descripcion.trim(),
-          puntoRetiroId: Number(formularioDocumento.puntoRetiroId),
-        }),
-      })
+      const respuesta = await apiRequest(
+        esEdicion
+          ? `/objeto/${documentoEditando.id}/documento`
+          : '/objeto/documento',
+        {
+          method: esEdicion ? 'PATCH' : 'POST',
+            body: JSON.stringify({
+              nombrePropietario: formularioDocumento.nombrePropietario.trim(),
+              rutPropietario: formularioDocumento.rutPropietario.trim(),
+              descripcion: formularioDocumento.descripcion.trim(),
+              puntoRetiroId: Number(formularioDocumento.puntoRetiroId),
+            }),
+        },
+      )
 
       setDocumentoModalAbierto(false)
+      setDocumentoEditando(null)
       setFormularioDocumento({ nombrePropietario: '', rutPropietario: '', descripcion: '', puntoRetiroId: '' })
-      setAviso('Documento registrado y disponible en el catálogo.')
-      setIntentos((actuales) => actuales + 1)
+      if (esEdicion) {
+        setObjetos((actuales) => actuales.map((objeto) => (
+          objeto.id === respuesta.objeto.id ? respuesta.objeto : objeto
+        )))
+        setAviso('Documento actualizado.')
+      } else {
+        setAviso('Documento registrado y disponible en el catálogo.')
+        setIntentos((actuales) => actuales + 1)
+      }
     } catch (requestError) {
       setErrorDocumento(requestError.message || 'No se pudo registrar el documento.')
     } finally {
       setGuardandoDocumento(false)
     }
-  }
-
-  function cerrarFormularioDocumento() {
-    if (guardandoDocumento) return
-    setDocumentoModalAbierto(false)
-    setErrorDocumento('')
   }
 
   async function eliminarObjeto(objeto) {
@@ -261,7 +309,7 @@ function PaginaObjetos() {
           <button
             className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#0b4263] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#155779] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={puntosRetiro.length === 0}
-            onClick={() => setDocumentoModalAbierto(true)}
+            onClick={() => abrirFormularioDocumento()}
             type="button"
           >
             <Plus aria-hidden="true" size={17} /> Nuevo documento perdido
@@ -325,7 +373,7 @@ function PaginaObjetos() {
               <p className="mb-0 mt-2 text-[11px] text-[#81929f]">Registrado el {formatoFecha.format(new Date(objeto.createdAt))}</p>
               {esFuncionario && (
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-[#e7edef] pt-3">
-                  <button aria-label={`Editar ${objeto.descripcion}`} className="inline-flex min-h-9 items-center gap-1.5 rounded border border-[#cbd8df] px-3 text-xs font-semibold text-[#31566a] hover:bg-[#f3f7f9] disabled:cursor-not-allowed disabled:opacity-50" disabled={guardando} onClick={() => abrirFormulario(objeto)} type="button">
+                  <button aria-label={`Editar ${objeto.descripcion}`} className="inline-flex min-h-9 items-center gap-1.5 rounded border border-[#cbd8df] px-3 text-xs font-semibold text-[#31566a] hover:bg-[#f3f7f9] disabled:cursor-not-allowed disabled:opacity-50" disabled={guardando || guardandoDocumento} onClick={() => abrirEdicion(objeto)} type="button">
                     <Pencil aria-hidden="true" size={14} /> Editar
                   </button>
                   <button className="inline-flex min-h-9 items-center gap-1.5 rounded border border-[#b7d9c4] px-3 text-xs font-semibold text-[#24744e] hover:bg-[#f1faf4] disabled:cursor-not-allowed disabled:opacity-50" disabled={guardando} onClick={() => navigate('/funcionario/retiros')} type="button">
@@ -445,7 +493,9 @@ function PaginaObjetos() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="m-0 text-[10px] font-bold uppercase text-[#1781a8]">OBJETOS ENCONTRADOS</p>
-                <h2 className="mb-0 mt-1 text-xl font-semibold text-[#193449]" id="document-form-title">Registrar documento perdido</h2>
+                <h2 className="mb-0 mt-1 text-xl font-semibold text-[#193449]" id="document-form-title">
+                  {documentoEditando ? 'Editar documento personal' : 'Registrar documento perdido'}
+                </h2>
               </div>
               <button aria-label="Cerrar" className="grid size-8 place-items-center rounded border border-[#d5e0e5] text-[#526b79] hover:bg-[#f3f7f9] disabled:opacity-50" disabled={guardandoDocumento} onClick={cerrarFormularioDocumento} type="button">
                 <X size={16} />
@@ -501,7 +551,7 @@ function PaginaObjetos() {
                   Cancelar
                 </button>
                 <button className="rounded bg-[#0b4263] px-4 py-2 text-sm font-semibold text-white hover:bg-[#155779] disabled:opacity-60" disabled={guardandoDocumento} type="submit">
-                  {guardandoDocumento ? 'Guardando...' : 'Registrar documento'}
+                  {guardandoDocumento ? 'Guardando...': documentoEditando? 'Guardar cambios': 'Registrar documento'}
                 </button>
               </div>
             </form>

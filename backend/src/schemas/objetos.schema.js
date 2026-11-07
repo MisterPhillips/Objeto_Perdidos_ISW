@@ -39,6 +39,19 @@ export const crearDocumentoSchema = z.object({
   puntoRetiroId: identificador('El identificador del punto de retiro no es válido.'),
 });
 
+export const actualizarDocumentoSchema = z.object({
+  nombrePropietario: textoObligatorio('nombrePropietario', 100),
+  rutPropietario: z.preprocess(
+    (valor) => typeof valor === 'string' && !valor.trim() ? null : valor,
+    z.string().trim().max(20).nullable().optional(),
+  ),
+  descripcion: z.string({ error: 'La descripción es obligatoria y no puede superar los 150 caracteres.' })
+    .trim()
+    .min(1, { error: 'La descripción es obligatoria y no puede superar los 150 caracteres.' })
+    .max(150, { error: 'La descripción es obligatoria y no puede superar los 150 caracteres.' }),
+  puntoRetiroId: identificador('El identificador del punto de retiro no es válido.'),
+});
+
 export const actualizarObjetoParamsSchema = z.object({
   id: identificador('El identificador del objeto no es válido.'),
 });

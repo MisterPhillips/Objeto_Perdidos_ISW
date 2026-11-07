@@ -4,6 +4,7 @@ import {
   actualizarImagenObjeto as actualizarImagenObjetoService,
   eliminarObjeto as eliminarObjetoService,
   entregarObjeto as entregarObjetoService,
+  actualizarDocumento as actualizarDocumentoService,
   registrarObjeto,
   registrarDocumento,
   obtenerCatalogo,
@@ -12,6 +13,7 @@ import {
 import {
   actualizarObjetoParamsSchema,
   actualizarObjetoSchema,
+  actualizarDocumentoSchema,
   crearObjetoSchema,
   eliminarObjetoParamsSchema,
   entregarObjetoParamsSchema,
@@ -116,6 +118,27 @@ export const listarObjetosGestion = async (_req, res) => {
     return res.status(200).json({ objetos });
   } catch (error) {
     return res.status(error.statusCode || 500).json({ error: error.message || 'Error interno del servidor.' });
+  }
+};
+
+export const actualizarDocumento = async (req, res) => {
+  try {
+    const parametros = validar(actualizarObjetoParamsSchema, req.params, res);
+    if (!parametros) return;
+
+    const datos = validar(actualizarDocumentoSchema, req.body || {}, res);
+    if (!datos) return;
+
+    const objeto = await actualizarDocumentoService(parametros.id, datos);
+
+    return res.status(200).json({
+      message: 'Documento actualizado exitosamente.',
+      objeto,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      error: error.message || 'Error interno del servidor.',
+    });
   }
 };
 
