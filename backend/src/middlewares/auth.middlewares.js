@@ -1,15 +1,21 @@
 import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma.js';
+import { normalizarRutChileno, rutChilenoValido } from '../utils/rut.js';
 
 export const validateRegister = (req, res, next) => {
-  const { nombre, correo, contrasena } = req.body;
+  const { nombre, correo, contrasena, rut } = req.body || {};
 
-  if (!nombre || !correo || !contrasena) {
+  if (!nombre || !correo || !contrasena || typeof rut !== 'string' || !rut.trim()) {
     return res.status(400).json({
-      error: 'Nombre, correo y contraseña son obligatorios.',
+      error: 'Nombre, correo, RUT y contraseña son obligatorios.',
     });
   }
 
+  if (!rutChilenoValido(rut)) {
+    return res.status(400).json({ error: 'Ingresa un RUT válido, por ejemplo 12.345.678-5.' });
+  }
+
+  req.body.rut = normalizarRutChileno(rut);
   next();
 };
 
@@ -59,5 +65,3 @@ export const verifyToken = async (req, res, next) => {
     return res.status(500).json({ error: 'No fue posible verificar la cuenta.' });
   }
 };
-
-//comentario random
