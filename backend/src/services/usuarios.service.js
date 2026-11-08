@@ -12,6 +12,7 @@ const crearError = (mensaje, statusCode) => {
 const seleccionarUsuarioPublico = {
 	id: true,
 	nombre: true,
+	rut: true,
 	correo: true,
 	rol: true,
 	activo: true,
@@ -41,13 +42,14 @@ export const listarUsuarios = async () => prisma.usuario.findMany({
 	orderBy: [{ activo: 'desc' }, { nombre: 'asc' }],
 });
 
-export const crearUsuario = async ({ nombre, correo, contrasena, rol }) => {
+export const crearUsuario = async ({ nombre, rut, correo, contrasena, rol }) => {
 	const contrasenaHasheada = await bcrypt.hash(contrasena, 10);
 
 	try {
 		return await prisma.usuario.create({
 			data: {
 				nombre,
+				rut,
 				correo: correo.toLowerCase(),
 				contrasena: contrasenaHasheada,
 				rol,
@@ -56,6 +58,9 @@ export const crearUsuario = async ({ nombre, correo, contrasena, rol }) => {
 		});
 	} catch (error) {
 		if (error.code === 'P2002') {
+			if (String(error.meta?.target).includes('rut')) {
+				throw crearError('Ya existe un usuario con ese RUT.', 409);
+			}
 			throw crearError('Ya existe un usuario con ese correo.', 409);
 		}
 		throw error;
@@ -87,6 +92,9 @@ export const actualizarUsuario = async (usuarioId, datos) => {
 		});
 	} catch (error) {
 		if (error.code === 'P2002') {
+			if (String(error.meta?.target).includes('rut')) {
+				throw crearError('Ya existe un usuario con ese RUT.', 409);
+			}
 			throw crearError('Ya existe un usuario con ese correo.', 409);
 		}
 		throw error;
