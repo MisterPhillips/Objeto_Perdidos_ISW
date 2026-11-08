@@ -32,6 +32,7 @@ model Usuario {
   rol        RolUsuario @default(ESTUDIANTE)
   activo     Boolean    @default(true)
   nombre     String     @db.VarChar(100)
+  rut        String     @unique @db.VarChar(12)
   correo     String     @unique @db.VarChar(150)
   contrasena String     @db.VarChar(255)
   createdAt  DateTime   @default(now())

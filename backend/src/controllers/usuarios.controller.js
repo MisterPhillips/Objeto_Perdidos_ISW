@@ -5,6 +5,7 @@ import {
 	listarUsuarios as listarUsuariosService,
 	rolesPermitidos,
 } from '../services/usuarios.service.js';
+import { normalizarRutChileno, rutChilenoValido } from '../utils/rut.js';
 
 const obtenerId = (id) => {
 	const usuarioId = Number(id);
@@ -27,12 +28,16 @@ export const listarUsuarios = async (_req, res) => {
 export const crearUsuario = async (req, res) => {
 	try {
 		const nombre = typeof req.body?.nombre === 'string' ? req.body.nombre.trim() : '';
+		const rut = typeof req.body?.rut === 'string' ? req.body.rut.trim() : '';
 		const correo = typeof req.body?.correo === 'string' ? req.body.correo.trim() : '';
 		const contrasena = req.body?.contrasena;
 		const rol = req.body?.rol;
 
 		if (!nombre || nombre.length > 100) {
 			return res.status(400).json({ error: 'El nombre es obligatorio y no puede superar 100 caracteres.' });
+		}
+		if (!rutChilenoValido(rut)) {
+			return res.status(400).json({ error: 'Ingresa un RUT válido, por ejemplo 12.345.678-5.' });
 		}
 		if (!correo || correo.length > 150 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
 			return res.status(400).json({ error: 'Indica un correo válido de hasta 150 caracteres.' });
@@ -44,7 +49,7 @@ export const crearUsuario = async (req, res) => {
 			return res.status(400).json({ error: 'El rol indicado no es válido.' });
 		}
 
-		const usuario = await crearUsuarioService({ nombre, correo, contrasena, rol });
+		const usuario = await crearUsuarioService({ nombre, rut: normalizarRutChileno(rut), correo, contrasena, rol });
 		return res.status(201).json({ message: 'Usuario creado exitosamente.', usuario });
 	} catch (error) {
 		return responderError(res, error);
@@ -62,6 +67,12 @@ export const actualizarUsuario = async (req, res) => {
 				return res.status(400).json({ error: 'El nombre es obligatorio y no puede superar 100 caracteres.' });
 			}
 			datos.nombre = req.body.nombre.trim();
+		}
+		if (req.body?.rut !== undefined) {
+			if (typeof req.body.rut !== 'string' || !rutChilenoValido(req.body.rut)) {
+				return res.status(400).json({ error: 'Ingresa un RUT válido, por ejemplo 12.345.678-5.' });
+			}
+			datos.rut = normalizarRutChileno(req.body.rut);
 		}
 		if (req.body?.correo !== undefined) {
 			if (typeof req.body.correo !== 'string' || req.body.correo.trim().length > 150
