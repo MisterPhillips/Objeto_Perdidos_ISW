@@ -48,6 +48,7 @@ function App() {
         <Route element={<RutaFuncionario><PaginaPrincipal><PaginaRetiros /></PaginaPrincipal></RutaFuncionario>} path="/funcionario/retiros" />
         <Route element={<RutaAutenticada><PaginaPrincipal><PaginaInicio /></PaginaPrincipal></RutaAutenticada>} path="/inicio" />
         <Route element={<RutaAutenticada><PaginaPrincipal><MapaInteractivo /></PaginaPrincipal></RutaAutenticada>} path="/app/mapa" />
+        <Route element={<RutaAutenticada><Navigate replace to="/app/mapa" /></RutaAutenticada>} path="/app/puntos-retiro" />
         <Route element={<RutaAutenticada><PaginaPrincipal><PaginaObjetos /></PaginaPrincipal></RutaAutenticada>} path="/app/objetos" />
         <Route element={<RutaAutenticada><PaginaPrincipal /></RutaAutenticada>} path="/app/:seccion" />
         <Route element={<Navigate replace to="/" />} path="*" />
