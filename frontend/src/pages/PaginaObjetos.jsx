@@ -3,6 +3,7 @@ import { AlertCircle, ImagePlus, MapPin, PackageCheck, PackageOpen, Pencil, Plus
 import { useNavigate } from 'react-router-dom'
 import { apiRequest, apiRequestBlob } from '../config/apiClient.js'
 import { getSessionUser } from '../services/sessionService.js'
+import { formatearRut } from '../utils/rut.js'
 
 const formatoFecha = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' })
 const campoClase = 'h-10 rounded border border-[#cbd8df] bg-white px-3 text-sm font-normal outline-none focus:border-[#1781a8]'
@@ -78,6 +79,19 @@ function PaginaObjetos() {
   const [intentos, setIntentos] = useState(0)
   const [formulario, setFormulario] = useState({ descripcion: '', categoriaId: '', puntoRetiroId: '', objetoPrivado: false })
   const esFuncionario = getSessionUser()?.rol === 'FUNCIONARIO'
+  const [documentoModalAbierto, setDocumentoModalAbierto] = useState(false)
+  const [documentoEditando, setDocumentoEditando] = useState(null)
+  const [formularioDocumento, setFormularioDocumento] = useState({ nombrePropietario: '', rutPropietario: '', descripcion: '', puntoRetiroId: '' })
+  const [guardandoDocumento, setGuardandoDocumento] = useState(false)
+  const [errorDocumento, setErrorDocumento] = useState('')
+
+   // Constantes para validar si se puede registrar un objeto o documento
+  const normalizarNombreCategoria = (nombre) => nombre.trim().toLocaleLowerCase('es')
+  const categoriasObjetoComun = categorias.filter(
+    (categoria) => normalizarNombreCategoria(categoria.nombre) !== 'documento personal',
+  )
+  const puedeRegistrar = esFuncionario && categoriasObjetoComun.length > 0 && puntosRetiro.length > 0
+
 
   useEffect(() => () => {
     if (imagenPreviewRef.current) URL.revokeObjectURL(imagenPreviewRef.current)
@@ -94,6 +108,14 @@ function PaginaObjetos() {
     if (guardando) return
     setModalAbierto(false)
     limpiarImagenSeleccionada()
+  }
+
+  function cerrarFormularioDocumento() {
+    if (guardandoDocumento) return
+    setDocumentoModalAbierto(false)
+    setDocumentoEditando(null)
+    setFormularioDocumento({ nombrePropietario: '', rutPropietario: '', descripcion: '', puntoRetiroId: '' })
+    setErrorDocumento('')
   }
 
   useEffect(() => {
@@ -145,6 +167,37 @@ function PaginaObjetos() {
     setModalAbierto(true)
   }
 
+  function abrirFormularioDocumento(objeto = null) {
+    setErrorDocumento('')
+    if (objeto && !obtenerIdObjeto(objeto.id)) {
+      setErrorAccion('No se puede editar este documento porque no tiene un identificador válido.')
+      return
+    }
+
+    setDocumentoEditando(objeto)
+    setFormularioDocumento(objeto ? {
+      nombrePropietario: objeto.nombrePropietario || '',
+      rutPropietario: objeto.rutPropietario || '',
+      descripcion: objeto.descripcion || '',
+      puntoRetiroId: String(objeto.puntoRetiroId),
+    } : {
+      nombrePropietario: '',
+      rutPropietario: '',
+      descripcion: '',
+      puntoRetiroId: '',
+    })
+    setDocumentoModalAbierto(true)
+  }
+
+  function abrirEdicion(objeto) {
+    if (objeto.categoria?.nombre === 'Documento personal') {
+      abrirFormularioDocumento(objeto)
+      return
+    }
+
+    abrirFormulario(objeto)
+  }
+
   async function guardarObjeto(event) {
     event.preventDefault()
     const objetoId = objetoEditando ? obtenerIdObjeto(objetoEditando.id) : null
@@ -186,6 +239,59 @@ function PaginaObjetos() {
     }
   }
 
+  async function guardarDocumento(event) {
+    event.preventDefault()
+    setGuardandoDocumento(true)
+    setErrorDocumento('')
+    const esEdicion = documentoEditando !== null
+
+    try {
+      const respuesta = await apiRequest(
+        esEdicion
+          ? `/objeto/${documentoEditando.id}/documento`
+          : '/objeto/documento',
+        {
+          method: esEdicion ? 'PATCH' : 'POST',
+            body: JSON.stringify({
+              nombrePropietario: formularioDocumento.nombrePropietario.trim(),
+              rutPropietario: formularioDocumento.rutPropietario.trim(),
+              descripcion: formularioDocumento.descripcion.trim(),
+              puntoRetiroId: Number(formularioDocumento.puntoRetiroId),
+            }),
+        },
+      )
+
+      setDocumentoModalAbierto(false)
+      setDocumentoEditando(null)
+      setFormularioDocumento({ nombrePropietario: '', rutPropietario: '', descripcion: '', puntoRetiroId: '' })
+      if (esEdicion) {
+        setObjetos((actuales) => actuales.map((objeto) => (
+          objeto.id === respuesta.objeto.id ? respuesta.objeto : objeto
+        )))
+        setAviso('Documento actualizado.')
+      } else {
+        const mensajesCorreo = {
+          rut_faltante: 'no se envió porque el documento no tiene RUT.',
+          sin_coincidencia: 'no se encontró una cuenta asociada a ese RUT.',
+          smtp_no_configurado: 'el servicio de correo no está configurado.',
+          error_envio: 'ocurrió un error al enviar el correo.',
+        }
+        if (respuesta.correo?.enviado) {
+          setAviso('Documento registrado y correo enviado al propietario.')
+        } else {
+          const motivo = mensajesCorreo[respuesta.correo?.motivo]
+            || 'no se pudo confirmar el envío del correo.'
+          setAviso(`Documento registrado, pero ${motivo}`)
+        }
+        setIntentos((actuales) => actuales + 1)
+      }
+    } catch (requestError) {
+      setErrorDocumento(requestError.message || 'No se pudo registrar el documento.')
+    } finally {
+      setGuardandoDocumento(false)
+    }
+  }
+
   async function eliminarObjeto(objeto) {
     if (!window.confirm(`¿Eliminar el objeto "${objeto.descripcion}"? Esta acción no se puede deshacer.`)) return
     setErrorAccion('')
@@ -201,7 +307,6 @@ function PaginaObjetos() {
     }
   }
 
-  const puedeRegistrar = esFuncionario && categorias.length > 0 && puntosRetiro.length > 0
 
   return (
     <section aria-label="Objetos encontrados" className="mt-7">
@@ -211,6 +316,7 @@ function PaginaObjetos() {
           <p className="m-0 text-sm text-[#687f8d]">Consulta los objetos encontrados y dónde retirarlos.</p>
         </div>
         {esFuncionario && (
+          <div className="flex flex-wrap items-center gap-2">
           <button
             className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#0b4263] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#155779] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!puedeRegistrar}
@@ -219,6 +325,16 @@ function PaginaObjetos() {
           >
             <Plus aria-hidden="true" size={17} /> Nuevo objeto perdido
           </button>
+
+          <button
+            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#0b4263] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#155779] disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={puntosRetiro.length === 0}
+            onClick={() => abrirFormularioDocumento()}
+            type="button"
+          >
+            <Plus aria-hidden="true" size={17} /> Nuevo documento perdido
+          </button>
+          </div>
         )}
       </div>
 
@@ -259,6 +375,14 @@ function PaginaObjetos() {
                   <p className="m-0 mt-1 text-xs text-[#687f8d]">{objeto.categoria?.nombre || 'Sin categoría'}</p>
                 </div>
               </div>
+
+            {esFuncionario && (objeto.nombrePropietario || objeto.rutPropietario) && (
+              <p className="mb-0 mt-2 text-xs text-[#536d7c]">
+                Propietario: {objeto.nombrePropietario}
+                {objeto.rutPropietario && ` · RUT: ${formatearRut(objeto.rutPropietario)}`}
+              </p>
+            )}
+
               <p className={`mb-0 mt-3 inline-flex rounded px-2 py-1 text-[11px] font-semibold ${objeto.estado === 'ENTREGADO' ? 'bg-[#edf0f2] text-[#687783]' : 'bg-[#e8f5ed] text-[#24744e]'}`}>
                 {objeto.estado === 'ENTREGADO' ? 'Entregado' : 'Disponible'}
               </p>
@@ -269,7 +393,7 @@ function PaginaObjetos() {
               <p className="mb-0 mt-2 text-[11px] text-[#81929f]">Registrado el {formatoFecha.format(new Date(objeto.createdAt))}</p>
               {esFuncionario && (
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-[#e7edef] pt-3">
-                  <button aria-label={`Editar ${objeto.descripcion}`} className="inline-flex min-h-9 items-center gap-1.5 rounded border border-[#cbd8df] px-3 text-xs font-semibold text-[#31566a] hover:bg-[#f3f7f9] disabled:cursor-not-allowed disabled:opacity-50" disabled={guardando} onClick={() => abrirFormulario(objeto)} type="button">
+                  <button aria-label={`Editar ${objeto.descripcion}`} className="inline-flex min-h-9 items-center gap-1.5 rounded border border-[#cbd8df] px-3 text-xs font-semibold text-[#31566a] hover:bg-[#f3f7f9] disabled:cursor-not-allowed disabled:opacity-50" disabled={guardando || guardandoDocumento} onClick={() => abrirEdicion(objeto)} type="button">
                     <Pencil aria-hidden="true" size={14} /> Editar
                   </button>
                   <button className="inline-flex min-h-9 items-center gap-1.5 rounded border border-[#b7d9c4] px-3 text-xs font-semibold text-[#24744e] hover:bg-[#f1faf4] disabled:cursor-not-allowed disabled:opacity-50" disabled={guardando} onClick={() => navigate('/funcionario/retiros')} type="button">
@@ -346,7 +470,7 @@ function PaginaObjetos() {
                 Categoría
                 <select className={campoClase} onChange={(event) => setFormulario({ ...formulario, categoriaId: event.target.value })} required value={formulario.categoriaId}>
                   <option value="">Selecciona una categoría</option>
-                  {categorias.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>)}
+                  {categoriasObjetoComun.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>)}
                 </select>
               </label>
               <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
@@ -372,6 +496,85 @@ function PaginaObjetos() {
               <div className="mt-1 flex justify-end gap-2">
                 <button className="rounded border border-[#cbd8df] px-4 py-2 text-sm font-semibold hover:bg-[#f3f7f9] disabled:opacity-50" disabled={guardando} onClick={cerrarFormulario} type="button">Cancelar</button>
                 <button className="rounded bg-[#0b4263] px-4 py-2 text-sm font-semibold text-white hover:bg-[#155779] disabled:opacity-60" disabled={guardando} type="submit">{guardando ? 'Guardando...' : objetoEditando ? 'Guardar cambios' : 'Registrar objeto'}</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {documentoModalAbierto && (
+        <div
+          className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-[#132a38]/45 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) cerrarFormularioDocumento()
+          }}
+        >
+          <section aria-labelledby="document-form-title" aria-modal="true" className="my-auto w-full max-w-lg rounded-md border border-[#dbe4e8] bg-white p-6 shadow-xl" role="dialog">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="m-0 text-[10px] font-bold uppercase text-[#1781a8]">OBJETOS ENCONTRADOS</p>
+                <h2 className="mb-0 mt-1 text-xl font-semibold text-[#193449]" id="document-form-title">
+                  {documentoEditando ? 'Editar documento personal' : 'Registrar documento perdido'}
+                </h2>
+              </div>
+              <button aria-label="Cerrar" className="grid size-8 place-items-center rounded border border-[#d5e0e5] text-[#526b79] hover:bg-[#f3f7f9] disabled:opacity-50" disabled={guardandoDocumento} onClick={cerrarFormularioDocumento} type="button">
+                <X size={16} />
+              </button>
+            </div>
+            <form className="mt-5 grid gap-4" onSubmit={guardarDocumento}>
+              <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
+                Nombre del propietario
+                <input
+                  autoComplete="name"
+                  className={campoClase}
+                  maxLength="100"
+                  onChange={(event) => setFormularioDocumento({ ...formularioDocumento, nombrePropietario: event.target.value })}
+                  required
+                  value={formularioDocumento.nombrePropietario}
+                />
+              </label>
+              <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
+                RUT del propietario (opcional)
+                <input
+                  autoComplete="off"
+                  className={campoClase}
+                  maxLength="20"
+                  onChange={(event) => setFormularioDocumento({ ...formularioDocumento, rutPropietario: formatearRut(event.target.value)})}
+                  pattern="[0-9]{1,2}\.?[0-9]{3}\.?[0-9]{3}-[0-9Kk]"
+                  placeholder="12.345.678-5"
+                  value={formularioDocumento.rutPropietario}
+                />
+              </label>
+              <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
+                Descripción del documento
+                <textarea
+                  className="min-h-24 resize-y rounded border border-[#cbd8df] px-3 py-2 text-sm font-normal outline-none focus:border-[#1781a8]"
+                  maxLength="150"
+                  onChange={(event) => setFormularioDocumento({ ...formularioDocumento, descripcion: event.target.value })}
+                  required
+                  value={formularioDocumento.descripcion}
+                />
+              </label>
+              <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
+                Punto de retiro
+                <select
+                  className={campoClase}
+                  onChange={(event) => setFormularioDocumento({ ...formularioDocumento, puntoRetiroId: event.target.value })}
+                  required
+                  value={formularioDocumento.puntoRetiroId}
+                >
+                  <option value="">Selecciona un punto habilitado</option>
+                  {puntosRetiro.map((punto) => <option key={punto.id} value={punto.id}>{punto.nombre} · {punto.facultad}</option>)}
+                </select>
+              </label>
+              {errorDocumento && <p className="m-0 text-sm text-[#963d38]" role="alert">{errorDocumento}</p>}
+              <div className="mt-1 flex justify-end gap-2">
+                <button className="rounded border border-[#cbd8df] px-4 py-2 text-sm font-semibold hover:bg-[#f3f7f9] disabled:opacity-50" disabled={guardandoDocumento} onClick={cerrarFormularioDocumento} type="button">
+                  Cancelar
+                </button>
+                <button className="rounded bg-[#0b4263] px-4 py-2 text-sm font-semibold text-white hover:bg-[#155779] disabled:opacity-60" disabled={guardandoDocumento} type="submit">
+                  {guardandoDocumento ? 'Guardando...': documentoEditando? 'Guardar cambios': 'Registrar documento'}
+                </button>
               </div>
             </form>
           </section>

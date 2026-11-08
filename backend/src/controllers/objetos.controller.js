@@ -4,20 +4,25 @@ import {
   actualizarImagenObjeto as actualizarImagenObjetoService,
   eliminarObjeto as eliminarObjetoService,
   entregarObjeto as entregarObjetoService,
+  actualizarDocumento as actualizarDocumentoService,
   registrarObjeto,
+  registrarDocumento,
   obtenerCatalogo,
   obtenerObjetosGestion,
 } from '../services/objetos.service.js';
 import {
   actualizarObjetoParamsSchema,
   actualizarObjetoSchema,
+  actualizarDocumentoSchema,
   crearObjetoSchema,
   eliminarObjetoParamsSchema,
   entregarObjetoParamsSchema,
   entregarObjetoSchema,
   usuarioObjetoIdSchema,
+  crearDocumentoSchema,
 } from '../schemas/objetos.schema.js';
 import { leerImagen } from '../services/imagenes.service.js';
+import { notificarDocumentoRegistrado } from '../services/notificaciones.service.js';
 import prisma from '../config/prisma.js';
 
 const validar = (schema, datos, res, estado = 400) => {
@@ -58,17 +63,55 @@ export const crearObjeto = async (req, res) => {
   }
 };
 
+export const crearDocumento = async (req, res) => {
+  try {
+    const datos = validar(crearDocumentoSchema, req.body, res);
+    if (!datos) return;
+
+    const registradoPorId = validar(usuarioObjetoIdSchema, req.user?.id, res, 401);
+    if (!registradoPorId) return;
+
+    const objeto = await registrarDocumento({ ...datos, registradoPorId });
+    let correo;
+
+    try {
+      correo = await notificarDocumentoRegistrado({
+        rutPropietario: datos.rutPropietario,
+        facultad: objeto.puntoRetiro.facultad,
+      });
+    } catch (error) {
+      console.error('No se pudo enviar el aviso del documento registrado.', error.message);
+      correo = { enviado: false, motivo: 'error_envio' };
+    }
+
+    return res.status(201).json({
+      message: 'Documento registrado exitosamente.',
+      objeto,
+      correo,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      error: error.message || 'Error interno del servidor.',
+    });
+  }
+};
+
 //////////////////// CATÁLOGO ////////////////////
 
 export const listarObjetos = async (req, res) => {
   try {
     const objetos = await obtenerCatalogo(req.query);
 
-    const objetosVisibles = objetos.map((objeto) => (
-      req.user.rol === 'ESTUDIANTE' && objeto.objetoPrivado
+    const objetosVisibles = objetos.map((objeto) => {
+      const objetoVisible = req.user.rol === 'ESTUDIANTE' && objeto.objetoPrivado
         ? { ...objeto, descripcion: null, imagen: null }
-        : objeto
-    ));
+        : objeto;
+
+      if (req.user.rol === 'FUNCIONARIO') return objetoVisible;
+
+      const { nombrePropietario, rutPropietario, ...objetoSinDatosPropietario } = objetoVisible;
+      return objetoSinDatosPropietario;
+    });
 
     return res.status(200).json({
       message: 'Catálogo obtenido exitosamente.',
@@ -88,6 +131,27 @@ export const listarObjetosGestion = async (_req, res) => {
     return res.status(200).json({ objetos });
   } catch (error) {
     return res.status(error.statusCode || 500).json({ error: error.message || 'Error interno del servidor.' });
+  }
+};
+
+export const actualizarDocumento = async (req, res) => {
+  try {
+    const parametros = validar(actualizarObjetoParamsSchema, req.params, res);
+    if (!parametros) return;
+
+    const datos = validar(actualizarDocumentoSchema, req.body || {}, res);
+    if (!datos) return;
+
+    const objeto = await actualizarDocumentoService(parametros.id, datos);
+
+    return res.status(200).json({
+      message: 'Documento actualizado exitosamente.',
+      objeto,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      error: error.message || 'Error interno del servidor.',
+    });
   }
 };
 
