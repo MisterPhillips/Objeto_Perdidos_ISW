@@ -14,7 +14,7 @@ const obtenerIdObjeto = (id) => {
 
 function MarcoImagen({ src, alt, clase = '' }) {
   return (
-    <div className={`relative aspect-[16/9] overflow-hidden rounded bg-[#e8eef1] ${clase}`}>
+    <div className={`relative aspect-video overflow-hidden rounded bg-[#e8eef1] ${clase}`}>
       <div
         aria-hidden="true"
         className="absolute inset-0 scale-110 bg-cover bg-center opacity-50 blur-md"
@@ -312,7 +312,7 @@ function PaginaObjetos() {
     <section aria-label="Objetos encontrados" className="mt-7">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4 border-b border-[#dbe4e8] pb-4">
         <div>
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#658090]">CATÁLOGO DISPONIBLE</p>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#658090]">CATÁLOGO DISPONIBLE</p>
           <p className="m-0 text-sm text-[#687f8d]">Consulta los objetos encontrados y dónde retirarlos.</p>
         </div>
         {esFuncionario && (
