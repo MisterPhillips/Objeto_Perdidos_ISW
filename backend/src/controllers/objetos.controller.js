@@ -22,6 +22,7 @@ import {
   crearDocumentoSchema,
 } from '../schemas/objetos.schema.js';
 import { leerImagen } from '../services/imagenes.service.js';
+import { notificarDocumentoRegistrado } from '../services/notificaciones.service.js';
 import prisma from '../config/prisma.js';
 
 const validar = (schema, datos, res, estado = 400) => {
@@ -71,10 +72,22 @@ export const crearDocumento = async (req, res) => {
     if (!registradoPorId) return;
 
     const objeto = await registrarDocumento({ ...datos, registradoPorId });
+    let correo;
+
+    try {
+      correo = await notificarDocumentoRegistrado({
+        rutPropietario: datos.rutPropietario,
+        facultad: objeto.puntoRetiro.facultad,
+      });
+    } catch (error) {
+      console.error('No se pudo enviar el aviso del documento registrado.', error.message);
+      correo = { enviado: false, motivo: 'error_envio' };
+    }
 
     return res.status(201).json({
       message: 'Documento registrado exitosamente.',
       objeto,
+      correo,
     });
   } catch (error) {
     return res.status(error.statusCode || 500).json({

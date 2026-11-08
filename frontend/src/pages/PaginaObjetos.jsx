@@ -270,7 +270,19 @@ function PaginaObjetos() {
         )))
         setAviso('Documento actualizado.')
       } else {
-        setAviso('Documento registrado y disponible en el catálogo.')
+        const mensajesCorreo = {
+          rut_faltante: 'no se envió porque el documento no tiene RUT.',
+          sin_coincidencia: 'no se encontró una cuenta asociada a ese RUT.',
+          smtp_no_configurado: 'el servicio de correo no está configurado.',
+          error_envio: 'ocurrió un error al enviar el correo.',
+        }
+        if (respuesta.correo?.enviado) {
+          setAviso('Documento registrado y correo enviado al propietario.')
+        } else {
+          const motivo = mensajesCorreo[respuesta.correo?.motivo]
+            || 'no se pudo confirmar el envío del correo.'
+          setAviso(`Documento registrado, pero ${motivo}`)
+        }
         setIntentos((actuales) => actuales + 1)
       }
     } catch (requestError) {
