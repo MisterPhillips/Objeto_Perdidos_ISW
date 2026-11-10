@@ -171,7 +171,23 @@ export const actualizarDocumento = async (objetoId, datos) => {
 //////////////////// CATÁLOGO CONSOLIDADO ////////////////////
 
 export const obtenerCatalogo = async (filtros) => {
-  const { facultad, categoriaId } = filtros;
+  const {
+    facultad,
+    categoriaId,
+    puntoRetiroId,
+    busqueda,
+    limite,
+    diasDesde,
+  } = filtros;
+  const termino = typeof busqueda === 'string' ? busqueda.trim() : '';
+  const limiteSolicitado = Number(limite);
+  const take = Number.isInteger(limiteSolicitado) && limiteSolicitado > 0
+    ? Math.min(limiteSolicitado, 100)
+    : undefined;
+  const diasSolicitados = Number(diasDesde);
+  const fechaDesde = Number.isInteger(diasSolicitados) && diasSolicitados > 0
+    ? new Date(Date.now() - diasSolicitados * 24 * 60 * 60 * 1000)
+    : undefined;
 
   const where = {
     estado: {
@@ -193,18 +209,39 @@ export const obtenerCatalogo = async (filtros) => {
     where.categoriaId = Number(categoriaId);//si se indica la categoría en los filtros, se agregará a la condición where para filtrar los objetos por la categoría
   }
 
-  const objetos = await prisma.objeto.findMany({
-    where,
-    include: {
-      categoria: true,
-      puntoRetiro: true,
-    },
-    orderBy: {
-      createdAt: 'desc', //los objetos se ordenan por fecha de creación, de más reciente a más antiguo
-    },
-  });
+  if (puntoRetiroId) {
+    where.puntoRetiroId = Number(puntoRetiroId);
+  }
 
-  return objetos;
+  if (fechaDesde) {
+    where.createdAt = { gte: fechaDesde };
+  }
+
+  if (termino) {
+    where.OR = [
+      { descripcion: { contains: termino, mode: 'insensitive' } },
+      { categoria: { nombre: { contains: termino, mode: 'insensitive' } } },
+      { puntoRetiro: { nombre: { contains: termino, mode: 'insensitive' } } },
+      { puntoRetiro: { facultad: { contains: termino, mode: 'insensitive' } } },
+    ];
+  }
+
+  const [objetos, total] = await prisma.$transaction([
+    prisma.objeto.findMany({
+      where,
+      include: {
+        categoria: true,
+        puntoRetiro: true,
+      },
+      orderBy: {
+        createdAt: 'desc', //los objetos se ordenan por fecha de creación, de más reciente a más antiguo
+      },
+      ...(take ? { take } : {}),
+    }),
+    prisma.objeto.count({ where }),
+  ]);
+
+  return { objetos, total };
 };
 
 export const obtenerObjetosGestion = async () => prisma.objeto.findMany({

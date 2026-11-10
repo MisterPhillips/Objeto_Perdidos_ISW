@@ -95,11 +95,16 @@ const obtenerOCrearObjeto = async (datos, registradoPorId) => {
   });
 
   if (objetoExistente) {
+    await prisma.retiro.deleteMany({
+      where: { objetoId: objetoExistente.id },
+    });
+
     return prisma.objeto.update({
       where: { id: objetoExistente.id },
       data: {
         categoriaId: categoria.id,
         puntoRetiroId: puntoRetiro.id,
+        estado: 'DISPONIBLE',
       },
     });
   }
@@ -109,6 +114,7 @@ const obtenerOCrearObjeto = async (datos, registradoPorId) => {
       descripcion: datos.descripcion,
       categoriaId: categoria.id,
       puntoRetiroId: puntoRetiro.id,
+      estado: 'DISPONIBLE',
       registradoPorId,
     },
   });
