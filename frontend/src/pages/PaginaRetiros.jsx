@@ -138,6 +138,7 @@ function PaginaRetiros() {
     setObjetoSeleccionado(null)
     setRetirante(null)
     setIdentidadVerificada(false)
+    setLimiteResultados(12)
     setError('')
     campoBusquedaRef.current?.focus()
   }
@@ -159,20 +160,20 @@ function PaginaRetiros() {
             <label className="mb-1.5 block text-xs font-semibold text-[#31566a]" htmlFor="busquedaObjeto">Descripción, categoría o punto de retiro</label>
             <div className="relative">
               <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-3 text-[#6e8998]" size={16} />
-              <input ref={campoBusquedaRef} autoComplete="off" className={`${campoClase} pl-9`} id="busquedaObjeto" placeholder="Comienza a escribir para buscar..." value={busqueda} onChange={(event) => { const valor = event.target.value; setBusqueda(valor); setError(''); if (valor.trim().length < 2) setObjetos([]) }} />
+              <input ref={campoBusquedaRef} autoComplete="off" className={`${campoClase} pl-9`} id="busquedaObjeto" placeholder="Comienza a escribir para buscar..." value={busqueda} onChange={(event) => { const valor = event.target.value; setBusqueda(valor); setLimiteResultados(12); setError(''); if (valor.trim().length < 2) setObjetos([]) }} />
             </div>
             <p className="m-0 mt-2 text-xs text-[#81929f]">La búsqueda se actualiza automáticamente y muestra hasta {limiteResultados} resultados.</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Filter aria-hidden="true" className="text-[#6e8998]" size={15} />
-              <select aria-label="Filtrar por categoría" className="h-8 rounded border border-[#cbd8df] bg-white px-2 text-xs text-[#31566a]" value={categoriaSeleccionada} onChange={(event) => setCategoriaSeleccionada(event.target.value)}>
+              <select aria-label="Filtrar por categoría" className="h-8 rounded border border-[#cbd8df] bg-white px-2 text-xs text-[#31566a]" value={categoriaSeleccionada} onChange={(event) => { setCategoriaSeleccionada(event.target.value); setLimiteResultados(12) }}>
                 <option value="">Categoría: Todas</option>
                 {categorias.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>)}
               </select>
-              <select aria-label="Filtrar por lugar de retiro" className="h-8 rounded border border-[#cbd8df] bg-white px-2 text-xs text-[#31566a]" value={puntoRetiroSeleccionado} onChange={(event) => setPuntoRetiroSeleccionado(event.target.value)}>
+              <select aria-label="Filtrar por lugar de retiro" className="h-8 rounded border border-[#cbd8df] bg-white px-2 text-xs text-[#31566a]" value={puntoRetiroSeleccionado} onChange={(event) => { setPuntoRetiroSeleccionado(event.target.value); setLimiteResultados(12) }}>
                 <option value="">Lugar: Todos</option>
                 {puntosRetiro.map((punto) => <option key={punto.id} value={punto.id}>{punto.nombre}</option>)}
               </select>
-              <select aria-label="Filtrar por antigüedad" className="h-8 rounded border border-[#cbd8df] bg-white px-2 text-xs text-[#31566a]" value={antiguedadSeleccionada} onChange={(event) => setAntiguedadSeleccionada(event.target.value)}>
+              <select aria-label="Filtrar por antigüedad" className="h-8 rounded border border-[#cbd8df] bg-white px-2 text-xs text-[#31566a]" value={antiguedadSeleccionada} onChange={(event) => { setAntiguedadSeleccionada(event.target.value); setLimiteResultados(12) }}>
                 <option value="">Fecha: Cualquier fecha</option>
                 <option value="7">Últimos 7 días</option>
                 <option value="30">Últimos 30 días</option>
