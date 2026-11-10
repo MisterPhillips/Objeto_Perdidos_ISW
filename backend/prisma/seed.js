@@ -100,6 +100,7 @@ const obtenerOCrearObjeto = async (datos, registradoPorId) => {
       data: {
         categoriaId: categoria.id,
         puntoRetiroId: puntoRetiro.id,
+        estado: 'DISPONIBLE',
       },
     });
   }
@@ -109,6 +110,7 @@ const obtenerOCrearObjeto = async (datos, registradoPorId) => {
       descripcion: datos.descripcion,
       categoriaId: categoria.id,
       puntoRetiroId: puntoRetiro.id,
+      estado: 'DISPONIBLE',
       registradoPorId,
     },
   });
