@@ -171,11 +171,22 @@ export const actualizarDocumento = async (objetoId, datos) => {
 //////////////////// CATÁLOGO CONSOLIDADO ////////////////////
 
 export const obtenerCatalogo = async (filtros) => {
-  const { facultad, categoriaId, busqueda, limite } = filtros;
+  const {
+    facultad,
+    categoriaId,
+    puntoRetiroId,
+    busqueda,
+    limite,
+    diasDesde,
+  } = filtros;
   const termino = typeof busqueda === 'string' ? busqueda.trim() : '';
   const limiteSolicitado = Number(limite);
   const take = Number.isInteger(limiteSolicitado) && limiteSolicitado > 0
     ? Math.min(limiteSolicitado, 20)
+    : undefined;
+  const diasSolicitados = Number(diasDesde);
+  const fechaDesde = Number.isInteger(diasSolicitados) && diasSolicitados > 0
+    ? new Date(Date.now() - diasSolicitados * 24 * 60 * 60 * 1000)
     : undefined;
 
   const where = {
@@ -196,6 +207,14 @@ export const obtenerCatalogo = async (filtros) => {
 
   if (categoriaId) {
     where.categoriaId = Number(categoriaId);//si se indica la categoría en los filtros, se agregará a la condición where para filtrar los objetos por la categoría
+  }
+
+  if (puntoRetiroId) {
+    where.puntoRetiroId = Number(puntoRetiroId);
+  }
+
+  if (fechaDesde) {
+    where.createdAt = { gte: fechaDesde };
   }
 
   if (termino) {
