@@ -38,7 +38,7 @@ const accionesPorRol = {
     },
     {
       titulo: 'Registrar una entrega',
-      descripcion: 'Registra la entrega de un objeto y revisa la bitácora.',
+      descripcion: 'Registra la entrega de un objeto usando su RUT.',
       destino: '/funcionario/retiros',
       icono: ClipboardCheck,
       etiqueta: 'Registrar entrega',
