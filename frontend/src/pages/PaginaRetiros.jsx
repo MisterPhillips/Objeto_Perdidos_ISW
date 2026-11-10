@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { AlertCircle, CheckCircle2, Search, UserCheck } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { AlertCircle, CheckCircle2, Filter, Search, UserCheck } from 'lucide-react'
 import { apiRequest } from '../config/apiClient.js'
 import { formatearRut } from '../utils/rut.js'
 
@@ -8,6 +8,11 @@ const formatoFecha = new Intl.DateTimeFormat('es-CL', { day: 'numeric', month: '
 
 function PaginaRetiros() {
   const [busqueda, setBusqueda] = useState('')
+  const [categorias, setCategorias] = useState([])
+  const [puntosRetiro, setPuntosRetiro] = useState([])
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('')
+  const [puntoRetiroSeleccionado, setPuntoRetiroSeleccionado] = useState('')
+  const [antiguedadSeleccionada, setAntiguedadSeleccionada] = useState('')
   const [objetos, setObjetos] = useState([])
   const [objetoSeleccionado, setObjetoSeleccionado] = useState(null)
   const [rutRetirante, setRutRetirante] = useState('')
@@ -18,6 +23,25 @@ function PaginaRetiros() {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
+  const campoBusquedaRef = useRef(null)
+
+  useEffect(() => {
+    let vigente = true
+    Promise.all([
+      apiRequest('/categorias'),
+      apiRequest('/puntos-retiro?habilitado=true'),
+    ]).then(([categoriasRespuesta, puntosRespuesta]) => {
+      if (!vigente) return
+      setCategorias(categoriasRespuesta.categorias)
+      setPuntosRetiro(puntosRespuesta.puntosRetiro)
+    }).catch((requestError) => {
+      if (vigente) setError(requestError.message || 'No se pudieron cargar los filtros.')
+    })
+
+    return () => {
+      vigente = false
+    }
+  }, [])
 
   useEffect(() => {
     const termino = busqueda.trim()
@@ -29,7 +53,13 @@ function PaginaRetiros() {
     const temporizador = setTimeout(async () => {
       setBuscandoObjetos(true)
       try {
-        const parametros = new URLSearchParams({ busqueda: termino, limite: '12' })
+        const parametros = new URLSearchParams({
+          busqueda: termino,
+          limite: '12',
+        })
+        if (categoriaSeleccionada) parametros.set('categoriaId', categoriaSeleccionada)
+        if (puntoRetiroSeleccionado) parametros.set('puntoRetiroId', puntoRetiroSeleccionado)
+        if (antiguedadSeleccionada) parametros.set('diasDesde', antiguedadSeleccionada)
         const catalogo = await apiRequest(`/objeto?${parametros.toString()}`)
         if (vigente) setObjetos(catalogo.objetos)
       } catch (requestError) {
@@ -46,7 +76,7 @@ function PaginaRetiros() {
       vigente = false
       clearTimeout(temporizador)
     }
-  }, [busqueda])
+  }, [antiguedadSeleccionada, busqueda, categoriaSeleccionada, puntoRetiroSeleccionado])
 
   async function verificarRetirante(event) {
     event.preventDefault()
@@ -90,15 +120,18 @@ function PaginaRetiros() {
     }
   }
 
+  function cambiarObjeto() {
+    setObjetoSeleccionado(null)
+    setRetirante(null)
+    setIdentidadVerificada(false)
+    setError('')
+    campoBusquedaRef.current?.focus()
+  }
+
   const puedeConfirmar = Boolean(objetoSeleccionado && retirante && identidadVerificada && !guardando)
 
   return (
     <section aria-label="Registro de entregas" className="mt-7">
-      <div className="mb-5">
-        <p className="m-0 text-[10px] font-bold uppercase tracking-[.12em] text-[#1688c7]">FINDUBB / Registrar entregas</p>
-        <h1 className="m-0 mt-1 text-2xl font-semibold text-[#183247]">Registrar entrega</h1>
-      </div>
-
       {error && <p className="mb-4 flex items-start gap-2 rounded-md border border-[#eccaca] bg-[#fff5f4] px-3 py-2.5 text-sm text-[#963d38]" role="alert"><AlertCircle className="mt-0.5 shrink-0" size={16} />{error}</p>}
       {aviso && <p className="mb-4 flex items-start gap-2 rounded-md border border-[#c7e4d3] bg-[#f1faf4] px-3 py-2.5 text-sm text-[#24744e]" role="status"><CheckCircle2 className="mt-0.5 shrink-0" size={16} />{aviso}</p>}
 
@@ -112,14 +145,33 @@ function PaginaRetiros() {
             <label className="mb-1.5 block text-xs font-semibold text-[#31566a]" htmlFor="busquedaObjeto">Descripción, categoría o punto de retiro</label>
             <div className="relative">
               <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-3 text-[#6e8998]" size={16} />
-              <input autoComplete="off" className={`${campoClase} pl-9`} id="busquedaObjeto" placeholder="Comienza a escribir para buscar..." value={busqueda} onChange={(event) => { const valor = event.target.value; setBusqueda(valor); setError(''); if (valor.trim().length < 2) setObjetos([]) }} />
+              <input ref={campoBusquedaRef} autoComplete="off" className={`${campoClase} pl-9`} id="busquedaObjeto" placeholder="Comienza a escribir para buscar..." value={busqueda} onChange={(event) => { const valor = event.target.value; setBusqueda(valor); setError(''); if (valor.trim().length < 2) setObjetos([]) }} />
             </div>
             <p className="m-0 mt-2 text-xs text-[#81929f]">La búsqueda se actualiza automáticamente y muestra hasta 12 resultados.</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Filter aria-hidden="true" className="text-[#6e8998]" size={15} />
+              <select aria-label="Filtrar por categoría" className="h-8 rounded border border-[#cbd8df] bg-white px-2 text-xs text-[#31566a]" value={categoriaSeleccionada} onChange={(event) => setCategoriaSeleccionada(event.target.value)}>
+                <option value="">Categoría: Todas</option>
+                {categorias.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>)}
+              </select>
+              <select aria-label="Filtrar por lugar de retiro" className="h-8 rounded border border-[#cbd8df] bg-white px-2 text-xs text-[#31566a]" value={puntoRetiroSeleccionado} onChange={(event) => setPuntoRetiroSeleccionado(event.target.value)}>
+                <option value="">Lugar: Todos</option>
+                {puntosRetiro.map((punto) => <option key={punto.id} value={punto.id}>{punto.nombre}</option>)}
+              </select>
+              <select aria-label="Filtrar por antigüedad" className="h-8 rounded border border-[#cbd8df] bg-white px-2 text-xs text-[#31566a]" value={antiguedadSeleccionada} onChange={(event) => setAntiguedadSeleccionada(event.target.value)}>
+                <option value="">Fecha: Cualquier fecha</option>
+                <option value="7">Últimos 7 días</option>
+                <option value="30">Últimos 30 días</option>
+                <option value="90">Últimos 90 días</option>
+              </select>
+            </div>
 
             {buscandoObjetos && <p className="mt-5 text-sm text-[#687f8d]" role="status">Buscando objetos disponibles...</p>}
             {!buscandoObjetos && busqueda.trim().length >= 2 && objetos.length === 0 && <p className="mt-5 rounded border border-[#eadcb8] bg-[#fffaf0] px-3 py-2.5 text-sm text-[#805d23]" role="status">No encontramos objetos disponibles. Prueba con otra palabra o ubicación.</p>}
             <div className="mt-4 grid gap-2">
-              {objetos.map((objeto) => (
+              {objetos
+                .filter((objeto) => !objetoSeleccionado || objeto.id === objetoSeleccionado.id)
+                .map((objeto) => (
                 <button className={`rounded-md border p-3 text-left transition ${objetoSeleccionado?.id === objeto.id ? 'border-[#1781a8] bg-[#eaf6fb]' : 'border-[#dbe4e8] hover:border-[#8fc8da] hover:bg-[#f8fcfd]'}`} key={objeto.id} onClick={() => { setObjetoSeleccionado(objeto); setRetirante(null); setIdentidadVerificada(false); setError('') }} type="button">
                   <span className="flex items-start justify-between gap-3">
                     <span>
@@ -130,7 +182,7 @@ function PaginaRetiros() {
                     <span className="shrink-0 rounded-full bg-[#dff5e7] px-2 py-1 text-[10px] font-semibold text-[#24744e]">Disponible</span>
                   </span>
                 </button>
-              ))}
+                ))}
             </div>
           </section>
 
@@ -163,6 +215,9 @@ function PaginaRetiros() {
             <div className="rounded-md border border-[#dbe4e8] bg-[#f8fcfd] p-3">
               <strong className="block text-sm text-[#193449]">{objetoSeleccionado.descripcion}</strong>
               <span className="mt-1 block text-xs text-[#536d7c]">{objetoSeleccionado.id} · {objetoSeleccionado.puntoRetiro?.nombre}</span>
+              <button className="mt-3 text-xs font-semibold text-[#1781a8] underline-offset-2 hover:underline" onClick={cambiarObjeto} type="button">
+                Cambiar objeto
+              </button>
             </div>
           ) : <p className="m-0 rounded-md bg-[#f5f9fa] p-3 text-xs text-[#81929f]">Aún no seleccionas un objeto.</p>}
 
