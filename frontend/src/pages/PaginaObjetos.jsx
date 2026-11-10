@@ -12,21 +12,27 @@ const obtenerIdObjeto = (id) => {
   return Number.isSafeInteger(valor) && valor > 0 ? valor : null
 }
 
-function MarcoImagen({ src, alt, clase = '' }) {
+function MarcoImagen({ src, alt, clase = '', mensaje = '' }) {
   return (
-    <div className={`relative aspect-video overflow-hidden rounded bg-[#e8eef1] ${clase}`}>
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 scale-110 bg-cover bg-center opacity-50 blur-md"
-        style={{ backgroundImage: `url("${src}")` }}
-      />
-      <img alt={alt} className="relative z-10 size-full object-contain" src={src} />
+    <div className={`relative isolate grid aspect-video w-full shrink-0 place-items-center overflow-hidden rounded bg-[#e8eef1] ${clase}`}>
+      {src ? (
+        <>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 scale-110 bg-cover bg-center opacity-50 blur-md"
+            style={{ backgroundImage: `url("${src}")` }}
+          />
+          <img alt={alt} className="absolute inset-0 z-10 m-auto size-full object-contain object-center" src={src} />
+        </>
+      ) : (
+        <span className="px-3 text-center text-xs text-[#687f8d]">{mensaje}</span>
+      )}
     </div>
   )
 }
 
 function ImagenObjeto({ objeto, clase = '' }) {
-  const [imagenCargada, setImagenCargada] = useState({ clave: '', url: '', error: '' })
+  const [imagenCargada, setImagenCargada] = useState({ clave: '', url: '', error: false })
   const esFuncionario = getSessionUser()?.rol === 'FUNCIONARIO'
   const clave = `${objeto?.id}:${objeto?.imagen}:${objeto?.objetoPrivado}:${esFuncionario}`
 
@@ -39,11 +45,12 @@ function ImagenObjeto({ objeto, clase = '' }) {
       .then((blob) => {
         if (!vigente) return
         urlTemporal = URL.createObjectURL(blob)
-        setImagenCargada({ clave, url: urlTemporal, error: '' })
+        setImagenCargada({ clave, url: urlTemporal, error: false })
       })
       .catch((requestError) => {
         if (vigente) {
-          setImagenCargada({ clave, url: '', error: requestError.message || 'No se pudo cargar la imagen.' })
+          console.error('No se pudo cargar la imagen del objeto.', requestError)
+          setImagenCargada({ clave, url: '', error: true })
         }
       })
 
@@ -53,10 +60,14 @@ function ImagenObjeto({ objeto, clase = '' }) {
     }
   }, [objeto?.id, objeto?.imagen, objeto?.objetoPrivado, esFuncionario, clave])
 
-  if (!objeto?.imagen || (objeto.objetoPrivado && !esFuncionario)) return null
-  if (imagenCargada.clave !== clave) return null
-  if (imagenCargada.error) return <p className="m-0 rounded bg-[#fff5f4] p-3 text-xs text-[#963d38]" role="alert">{imagenCargada.error}</p>
-  if (!imagenCargada.url) return null
+  if (!objeto?.imagen) return <MarcoImagen alt="" clase={clase} mensaje="Sin fotografía" />
+  if (objeto.objetoPrivado && !esFuncionario) return <MarcoImagen alt="" clase={clase} mensaje="Imagen no disponible" />
+  if (imagenCargada.clave !== clave || !imagenCargada.url) {
+    const mensaje = imagenCargada.clave === clave && imagenCargada.error
+      ? 'Imagen no disponible'
+      : 'Cargando imagen...'
+    return <MarcoImagen alt="" clase={clase} mensaje={mensaje} />
+  }
   return <MarcoImagen alt={`Fotografía del objeto: ${objeto.descripcion || 'objeto encontrado'}`} clase={clase} src={imagenCargada.url} />
 }
 
@@ -96,6 +107,20 @@ function PaginaObjetos() {
   useEffect(() => () => {
     if (imagenPreviewRef.current) URL.revokeObjectURL(imagenPreviewRef.current)
   }, [])
+
+  useEffect(() => {
+    if (!modalAbierto && !documentoModalAbierto) return undefined
+
+    const overflowAnteriorHtml = document.documentElement.style.overflow
+    const overflowAnteriorBody = document.body.style.overflow
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.documentElement.style.overflow = overflowAnteriorHtml
+      document.body.style.overflow = overflowAnteriorBody
+    }
+  }, [modalAbierto, documentoModalAbierto])
 
   function limpiarImagenSeleccionada() {
     if (imagenPreviewRef.current) URL.revokeObjectURL(imagenPreviewRef.current)
@@ -310,7 +335,7 @@ function PaginaObjetos() {
 
   return (
     <section aria-label="Objetos encontrados" className="mt-7">
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-4 border-b border-[#dbe4e8] pb-4">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-[#dbe4e8] pb-4">
         <div>
           <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#658090]">CATÁLOGO DISPONIBLE</p>
           <p className="m-0 text-sm text-[#687f8d]">Consulta los objetos encontrados y dónde retirarlos.</p>
@@ -362,10 +387,10 @@ function PaginaObjetos() {
           <p className="mb-0 mt-3 text-sm font-semibold text-[#31566a]">No hay objetos disponibles en el catálogo.</p>
         </div>
       ) : !error && (
-        <div className="grid items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3">
           {objetos.map((objeto) => (
-            <article className="rounded-md border border-[#dbe4e8] bg-white p-4" key={objeto.id}>
-              <ImagenObjeto clase="mb-4 w-full" objeto={objeto} />
+            <article className="flex h-full min-w-0 flex-col rounded-md border border-[#dbe4e8] bg-white p-4" key={objeto.id}>
+              <ImagenObjeto clase="mb-4 shrink-0" objeto={objeto} />
               <div className="flex items-start gap-3">
                 <span className="grid size-9 shrink-0 place-items-center rounded-md bg-[#e9f4f8] text-[#16769c]">
                   <PackageOpen aria-hidden="true" size={18} />
@@ -410,8 +435,8 @@ function PaginaObjetos() {
       )}
 
       {modalAbierto && (
-        <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-[#132a38]/45 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) cerrarFormulario() }}>
-          <section aria-labelledby="object-form-title" aria-modal="true" className="my-auto w-full max-w-lg rounded-md border border-[#dbe4e8] bg-white p-6 shadow-xl" role="dialog">
+        <div className="fixed inset-0 z-40 flex items-center justify-center overflow-hidden bg-[#132a38]/45 p-4">
+          <section aria-labelledby="object-form-title" aria-modal="true" className="my-auto max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-md border border-[#dbe4e8] bg-white p-6 shadow-xl" role="dialog">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="m-0 text-[10px] font-bold uppercase text-[#1781a8]">OBJETOS ENCONTRADOS</p>
@@ -494,7 +519,6 @@ function PaginaObjetos() {
               </label>
               {errorFormulario && <p className="m-0 text-sm text-[#963d38]" role="alert">{errorFormulario}</p>}
               <div className="mt-1 flex justify-end gap-2">
-                <button className="rounded border border-[#cbd8df] px-4 py-2 text-sm font-semibold hover:bg-[#f3f7f9] disabled:opacity-50" disabled={guardando} onClick={cerrarFormulario} type="button">Cancelar</button>
                 <button className="rounded bg-[#0b4263] px-4 py-2 text-sm font-semibold text-white hover:bg-[#155779] disabled:opacity-60" disabled={guardando} type="submit">{guardando ? 'Guardando...' : objetoEditando ? 'Guardar cambios' : 'Registrar objeto'}</button>
               </div>
             </form>
@@ -503,13 +527,8 @@ function PaginaObjetos() {
       )}
 
       {documentoModalAbierto && (
-        <div
-          className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-[#132a38]/45 p-4"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) cerrarFormularioDocumento()
-          }}
-        >
-          <section aria-labelledby="document-form-title" aria-modal="true" className="my-auto w-full max-w-lg rounded-md border border-[#dbe4e8] bg-white p-6 shadow-xl" role="dialog">
+        <div className="fixed inset-0 z-40 flex items-center justify-center overflow-hidden bg-[#132a38]/45 p-4">
+          <section aria-labelledby="document-form-title" aria-modal="true" className="my-auto max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-md border border-[#dbe4e8] bg-white p-6 shadow-xl" role="dialog">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="m-0 text-[10px] font-bold uppercase text-[#1781a8]">OBJETOS ENCONTRADOS</p>
@@ -569,9 +588,6 @@ function PaginaObjetos() {
               </label>
               {errorDocumento && <p className="m-0 text-sm text-[#963d38]" role="alert">{errorDocumento}</p>}
               <div className="mt-1 flex justify-end gap-2">
-                <button className="rounded border border-[#cbd8df] px-4 py-2 text-sm font-semibold hover:bg-[#f3f7f9] disabled:opacity-50" disabled={guardandoDocumento} onClick={cerrarFormularioDocumento} type="button">
-                  Cancelar
-                </button>
                 <button className="rounded bg-[#0b4263] px-4 py-2 text-sm font-semibold text-white hover:bg-[#155779] disabled:opacity-60" disabled={guardandoDocumento} type="submit">
                   {guardandoDocumento ? 'Guardando...': documentoEditando? 'Guardar cambios': 'Registrar documento'}
                 </button>
