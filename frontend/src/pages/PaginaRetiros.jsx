@@ -29,7 +29,7 @@ function PaginaRetiros() {
     const temporizador = setTimeout(async () => {
       setBuscandoObjetos(true)
       try {
-        const parametros = new URLSearchParams({ q: termino, limite: '12' })
+        const parametros = new URLSearchParams({ busqueda: termino, limite: '12' })
         const catalogo = await apiRequest(`/objeto?${parametros.toString()}`)
         if (vigente) setObjetos(catalogo.objetos)
       } catch (requestError) {
