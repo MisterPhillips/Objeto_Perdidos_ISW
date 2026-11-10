@@ -22,18 +22,16 @@ const incluirRetiro = {
 
 export const registrarRetiro = async ({
   objetoId,
-  nombreRetirante,
   rutRetirante,
-  correoRetirante,
   funcionarioId,
 }) => prisma.$transaction(async (tx) => {
   const usuarioRetirante = await tx.usuario.findUnique({
-    where: { correo: correoRetirante },
-    select: { id: true, activo: true },
+    where: { rut: rutRetirante },
+    select: { id: true, nombre: true, rut: true, correo: true, activo: true },
   });
 
   if (!usuarioRetirante || !usuarioRetirante.activo) {
-    throw errorConEstado('El correo del retirante no corresponde a un usuario universitario activo.', 400);
+    throw errorConEstado('El RUT no corresponde a un usuario universitario activo.', 400);
   }
 
   const objetoActualizado = await tx.objeto.updateMany({
@@ -53,15 +51,28 @@ export const registrarRetiro = async ({
 
   return tx.retiro.create({
     data: {
-      nombreRetirante,
-      rutRetirante,
-      correoRetirante,
+      nombreRetirante: usuarioRetirante.nombre,
+      rutRetirante: usuarioRetirante.rut,
+      correoRetirante: usuarioRetirante.correo,
       objetoId,
       funcionarioId,
     },
     include: incluirRetiro,
   });
 });
+
+export const buscarRetirante = async (rutRetirante) => {
+  const usuario = await prisma.usuario.findUnique({
+    where: { rut: rutRetirante },
+    select: { nombre: true, rut: true, correo: true, activo: true },
+  });
+
+  if (!usuario || !usuario.activo) {
+    throw errorConEstado('El RUT no corresponde a un usuario universitario activo.', 404);
+  }
+
+  return usuario;
+};
 
 export const listarRetiros = async () => prisma.retiro.findMany({
   include: incluirRetiro,

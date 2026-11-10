@@ -100,7 +100,7 @@ export const crearDocumento = async (req, res) => {
 
 export const listarObjetos = async (req, res) => {
   try {
-    const objetos = await obtenerCatalogo(req.query);
+    const { objetos, total } = await obtenerCatalogo(req.query);
 
     const objetosVisibles = objetos.map((objeto) => {
       const objetoVisible = req.user.rol === 'ESTUDIANTE' && objeto.objetoPrivado
@@ -116,6 +116,7 @@ export const listarObjetos = async (req, res) => {
     return res.status(200).json({
       message: 'Catálogo obtenido exitosamente.',
       objetos: objetosVisibles,
+      total,
     });
   } catch (error) {
     const status = error.statusCode || 500;
