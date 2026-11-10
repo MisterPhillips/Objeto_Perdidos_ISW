@@ -59,6 +59,13 @@ function PaginaRetiros() {
   const campoBusquedaRef = useRef(null)
   const posicionAntesDeCargarRef = useRef(null)
 
+  useEffect(() => {
+    if (!aviso) return undefined
+
+    const temporizador = setTimeout(() => setAviso(''), 4500)
+    return () => clearTimeout(temporizador)
+  }, [aviso])
+
   useLayoutEffect(() => {
     if (posicionAntesDeCargarRef.current === null) return
 
@@ -185,7 +192,7 @@ function PaginaRetiros() {
   return (
     <section aria-label="Registro de entregas" className="mt-7">
       {error && <p className="mb-4 flex items-start gap-2 rounded-md border border-[#eccaca] bg-[#fff5f4] px-3 py-2.5 text-sm text-[#963d38]" role="alert"><AlertCircle className="mt-0.5 shrink-0" size={16} />{error}</p>}
-      {aviso && <p className="mb-4 flex items-start gap-2 rounded-md border border-[#c7e4d3] bg-[#f1faf4] px-3 py-2.5 text-sm text-[#24744e]" role="status"><CheckCircle2 className="mt-0.5 shrink-0" size={16} />{aviso}</p>}
+      {aviso && <div aria-live="polite" className="fixed right-5 top-5 z-50 flex max-w-sm items-start gap-2 rounded-md border border-[#c7e4d3] bg-white px-4 py-3 text-sm text-[#24744e] shadow-lg" role="status"><CheckCircle2 className="mt-0.5 shrink-0" size={17} />{aviso}</div>}
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,.8fr)]">
         <div className="grid gap-5">
