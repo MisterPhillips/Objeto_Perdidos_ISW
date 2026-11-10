@@ -6,13 +6,6 @@ const objetoId = z.coerce
   .int({ error: 'El identificador del objeto no es válido.' })
   .positive({ error: 'El identificador del objeto no es válido.' });
 
-const nombreRetirante = z.string({
-  error: 'El nombre de quien retira es obligatorio.',
-})
-  .trim()
-  .min(1, { error: 'El nombre de quien retira es obligatorio.' })
-  .max(100, { error: 'El nombre de quien retira no puede superar los 100 caracteres.' });
-
 const rutRetirante = z.string({
   error: 'El RUT de quien retira es obligatorio.',
 })
@@ -23,17 +16,9 @@ const rutRetirante = z.string({
   })
   .transform(normalizarRutChileno);
 
-const correoRetirante = z.string({
-  error: 'El correo de quien retira es obligatorio.',
-})
-  .trim()
-  .max(150, { error: 'El correo no puede superar los 150 caracteres.' })
-  .email({ error: 'Ingresa un correo válido.' })
-  .transform((correo) => correo.toLowerCase());
-
 export const registrarRetiroSchema = z.object({
   objetoId,
-  nombreRetirante,
   rutRetirante,
-  correoRetirante,
 });
+
+export const buscarRetiranteSchema = z.object({ rutRetirante });
