@@ -2,10 +2,7 @@
 CREATE TYPE "RolUsuario" AS ENUM ('FUNCIONARIO', 'ESTUDIANTE', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "EstadoObjeto" AS ENUM ('EN_REVISION', 'DISPONIBLE', 'ENTREGADO');
-
--- CreateEnum
-CREATE TYPE "EstadoSolicitudReclamo" AS ENUM ('PENDIENTE', 'APROBADA', 'RECHAZADA');
+CREATE TYPE "EstadoObjeto" AS ENUM ('DISPONIBLE', 'ENTREGADO');
 
 -- CreateTable
 CREATE TABLE "usuarios" (
@@ -50,7 +47,7 @@ CREATE TABLE "puntos_retiro" (
 CREATE TABLE "objetos" (
     "id" SERIAL NOT NULL,
     "descripcion" VARCHAR(150) NOT NULL,
-    "estado" "EstadoObjeto" NOT NULL DEFAULT 'EN_REVISION',
+    "estado" "EstadoObjeto" NOT NULL DEFAULT 'DISPONIBLE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "objetoPrivado" BOOLEAN NOT NULL DEFAULT false,
@@ -59,19 +56,6 @@ CREATE TABLE "objetos" (
     "registradoPorId" INTEGER NOT NULL,
 
     CONSTRAINT "objetos_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "solicitudes_reclamo" (
-    "id" SERIAL NOT NULL,
-    "detalle" VARCHAR(500) NOT NULL,
-    "estado" "EstadoSolicitudReclamo" NOT NULL DEFAULT 'PENDIENTE',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    "usuarioId" INTEGER NOT NULL,
-    "objetoId" INTEGER NOT NULL,
-
-    CONSTRAINT "solicitudes_reclamo_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -109,12 +93,6 @@ CREATE INDEX "objetos_categoriaId_idx" ON "objetos"("categoriaId");
 CREATE INDEX "objetos_estado_idx" ON "objetos"("estado");
 
 -- CreateIndex
-CREATE INDEX "solicitudes_reclamo_usuarioId_estado_idx" ON "solicitudes_reclamo"("usuarioId", "estado");
-
--- CreateIndex
-CREATE INDEX "solicitudes_reclamo_objetoId_estado_idx" ON "solicitudes_reclamo"("objetoId", "estado");
-
--- CreateIndex
 CREATE UNIQUE INDEX "retiros_objetoId_key" ON "retiros"("objetoId");
 
 -- CreateIndex
@@ -131,12 +109,6 @@ ALTER TABLE "objetos" ADD CONSTRAINT "objetos_puntoRetiroId_fkey" FOREIGN KEY ("
 
 -- AddForeignKey
 ALTER TABLE "objetos" ADD CONSTRAINT "objetos_registradoPorId_fkey" FOREIGN KEY ("registradoPorId") REFERENCES "usuarios"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "solicitudes_reclamo" ADD CONSTRAINT "solicitudes_reclamo_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "usuarios"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "solicitudes_reclamo" ADD CONSTRAINT "solicitudes_reclamo_objetoId_fkey" FOREIGN KEY ("objetoId") REFERENCES "objetos"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "retiros" ADD CONSTRAINT "retiros_objetoId_fkey" FOREIGN KEY ("objetoId") REFERENCES "objetos"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
