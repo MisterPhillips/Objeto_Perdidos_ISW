@@ -1,6 +1,8 @@
 import { AlertCircle, Building2, Clock3, MapPin, Search, X } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import MapaCampus from '../components/MapaCampus.jsx'
 import { useMapaInteractivo } from '../components/useMapaInteractivo.js'
+import { getSessionUser } from '../services/sessionService.js'
 
 const formatoFecha = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' })
 
@@ -10,6 +12,9 @@ const estadosObjeto = {
 }
 
 function MapaInteractivo() {
+	const navigate = useNavigate()
+	const location = useLocation()
+	const esAdministrador = getSessionUser()?.rol === 'ADMIN'
 	const {
 		puntosRetiro,
 		cargando,
@@ -33,6 +38,23 @@ function MapaInteractivo() {
 
 	return (
 		<>
+			{location.state?.aviso && (
+				<p className="mb-4 rounded-md border border-[#c8e3d2] bg-[#f0faf3] px-4 py-3 text-sm text-[#24744e]" role="status">
+					{location.state.aviso}
+				</p>
+			)}
+			{esAdministrador && (
+				<div className="mb-4 flex justify-end">
+					<button
+						className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b4263] px-4 text-xs font-semibold text-white hover:bg-[#155779]"
+						onClick={() => navigate('/admin/puntos-retiro/nuevo')}
+						type="button"
+					>
+						<Building2 aria-hidden="true" size={16} />
+						Agregar punto de retiro
+					</button>
+				</div>
+			)}
 			<MapaCampus onAbrirPunto={abrirPunto} puntosRetiro={puntosRetiro} />
 			<section aria-label="Estado de los puntos de retiro en el mapa" className="mt-4">
 				{error && (

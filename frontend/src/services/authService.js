@@ -15,11 +15,11 @@ export async function login({ correo, contrasena }) {
   }
 }
 
-export async function register({ nombre, correo, contrasena }) {
+export async function register({ nombre, rut, correo, contrasena }) {
   try {
     return await apiRequest('/register', {
       method: 'POST',
-      body: JSON.stringify({ nombre, correo, contrasena }),
+      body: JSON.stringify({ nombre, rut, correo, contrasena }),
     })
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {

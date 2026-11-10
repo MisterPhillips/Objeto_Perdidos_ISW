@@ -125,7 +125,7 @@ function PaginaCategorias() {
 
       <div className="mt-4 overflow-hidden rounded-md border border-[#dbe4e8] bg-white">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[620px] border-collapse text-left text-sm">
+          <table className="w-full min-w-155 border-collapse text-left text-sm">
             <thead className="bg-[#f5f8f9] text-[11px] uppercase text-[#607987]">
               <tr><th className="px-5 py-3 font-semibold">Categoría</th><th className="px-5 py-3 font-semibold">Descripción</th><th className="px-5 py-3 text-right font-semibold">Acciones</th></tr>
             </thead>

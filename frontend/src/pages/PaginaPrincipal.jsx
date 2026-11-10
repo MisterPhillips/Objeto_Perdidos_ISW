@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   Building2,
   ClipboardList,
+  ClipboardCheck,
   House,
   LogOut,
   MapPin,
@@ -18,14 +19,14 @@ const secciones = [
   { label: 'Inicio', path: '/inicio', icon: House },
   { label: 'Objetos encontrados', path: '/app/objetos', icon: PackageSearch },
   { label: 'Mapa interactivo', path: '/app/mapa', icon: MapPin },
-  { label: 'Solicitudes', path: '/app/solicitudes', icon: ClipboardList },
-  { label: 'Puntos de retiro', path: '/app/puntos-retiro', icon: Building2 },
   { label: 'Registrar entregas', path: '/funcionario/retiros', icon: ClipboardList, funcionario: true },
+  { label: 'Bitácora de entregas', path: '/funcionario/bitacora-retiros', icon: ClipboardCheck, funcionario: true },
 ]
 
 const seccionesAdministracion = [
   { label: 'Categorías', path: '/admin/categorias', icon: Tags },
   { label: 'Usuarios', path: '/admin/usuarios', icon: Users },
+  { label: 'Agregar punto de retiro', path: '/admin/puntos-retiro/nuevo', icon: Building2 },
 ]
 
 function PaginaPrincipal({ children }) {
@@ -37,7 +38,8 @@ function PaginaPrincipal({ children }) {
   const enlacesVisibles = usuario?.rol === 'ADMIN'
     ? [...seccionesVisibles, ...seccionesAdministracion]
     : seccionesVisibles
-  const seccionActiva = enlacesVisibles.find(({ path }) => path === location.pathname) || secciones[0]
+  const seccionActiva = enlacesVisibles.find(({ path }) => path === location.pathname)
+    || (location.pathname === '/admin/puntos-retiro/nuevo' ? seccionesAdministracion[1] : secciones[0])
 
   function cerrarSesion() {
     clearSession()
@@ -51,8 +53,8 @@ function PaginaPrincipal({ children }) {
         aria-current={activa ? 'page' : undefined}
         className={`flex min-h-10 items-center gap-3 rounded-md px-3 text-[13px] font-medium no-underline transition-colors ${
           activa
-            ? 'bg-[rgb(89_190_220_/_16%)] text-white'
-            : 'text-[#bfd0dc] hover:bg-[rgb(255_255_255_/_7%)] hover:text-white'
+            ? 'bg-[rgb(89_190_220/16%)] text-white'
+            : 'text-[#bfd0dc] hover:bg-[rgb(255_255_255/7%)] hover:text-white'
         }`}
         href={path}
         key={path}
@@ -79,8 +81,8 @@ function PaginaPrincipal({ children }) {
         />
       )}
 
-      <aside className={`fixed inset-y-0 left-0 z-30 flex w-[264px] flex-col bg-[#073252] text-white transition-transform duration-200 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="flex h-[82px] shrink-0 items-center justify-between border-b border-white/10 px-5">
+      <aside className={`fixed inset-y-0 left-0 z-30 flex w-66 flex-col bg-[#073252] text-white transition-transform duration-200 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex h-20.5 shrink-0 items-center justify-between border-b border-white/10 px-5">
           <div className="flex items-center gap-3">
             <span className="grid size-10 place-items-center rounded-[9px] bg-white text-[11px] font-extrabold text-[#073252]">UBB</span>
             <div>
@@ -134,8 +136,8 @@ function PaginaPrincipal({ children }) {
         </div>
       </aside>
 
-      <div className="min-h-screen lg:pl-[264px]">
-        <header className="sticky top-0 z-10 flex h-[66px] items-center gap-3 border-b border-[#dbe4e8] bg-white px-5 sm:px-7">
+      <div className="min-h-screen lg:pl-66">
+        <header className="sticky top-0 z-10 flex h-16.5 items-center gap-3 border-b border-[#dbe4e8] bg-white px-5 sm:px-7">
           <button
             aria-label="Abrir navegación"
             className="grid size-9 shrink-0 place-items-center rounded-md border border-[#d5e0e5] text-[#31566a] hover:bg-[#f3f7f9] lg:hidden"
@@ -150,7 +152,7 @@ function PaginaPrincipal({ children }) {
 
         <main className="min-h-[calc(100vh-66px)] px-5 py-8 sm:px-7 lg:px-10 lg:py-10">
           <div className="border-b border-[#dbe4e8] pb-5">
-            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#1781a8]">FINDUBB / {seccionActiva.label}</p>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#1781a8]">FINDUBB / {seccionActiva.label}</p>
             <h1 className="m-0 text-[25px] font-semibold leading-tight text-[#193449]">{seccionActiva.label}</h1>
           </div>
           {children}

@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
-import { apiRequest } from '../config/apiClient.js'
+import {
+	obtenerObjetosPuntoRetiro,
+	obtenerPuntosRetiroMapa,
+} from '../services/mapaInteractivoService.js'
 
 export function useMapaInteractivo() {
 	const [puntosRetiro, setPuntosRetiro] = useState([])
@@ -18,7 +21,7 @@ export function useMapaInteractivo() {
 	useEffect(() => {
 		let vigente = true
 
-		apiRequest('/puntos-retiro/mapa')
+		obtenerPuntosRetiroMapa()
 			.then((data) => {
 				if (vigente) setPuntosRetiro(data.puntosRetiro)
 			})
@@ -38,7 +41,7 @@ export function useMapaInteractivo() {
 		if (puntoSeleccionadoId === undefined) return undefined
 
 		let vigente = true
-		apiRequest(`/puntos-retiro/${puntoSeleccionadoId}/objetos`)
+		obtenerObjetosPuntoRetiro(puntoSeleccionadoId)
 			.then((data) => {
 				if (vigente) {
 					setPuntoSeleccionado(data.puntoRetiro)

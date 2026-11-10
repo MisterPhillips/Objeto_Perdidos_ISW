@@ -1,63 +1,42 @@
 import {
+  buscarRetirante as buscarRetiranteService,
+  listarFuncionariosConRetiros as listarFuncionariosConRetirosService,
   listarRetiros as listarRetirosService,
   registrarRetiro as registrarRetiroService,
 } from '../services/retiros.service.js';
-
-const textoValido = (valor, maximo) => (
-  typeof valor === 'string' && valor.trim().length > 0 && valor.trim().length <= maximo
-);
-
-const rutChilenoValido = (rut) => {
-  const valor = rut.replace(/\./g, '').replace(/\s/g, '').toUpperCase();
-  const coincidencia = /^(\d{7,8})-([0-9K])$/.exec(valor);
-
-  if (!coincidencia) return false;
-
-  const cuerpo = coincidencia[1];
-  const digitoEsperado = coincidencia[2];
-  let suma = 0;
-  let multiplicador = 2;
-
-  for (let indice = cuerpo.length - 1; indice >= 0; indice -= 1) {
-    suma += Number(cuerpo[indice]) * multiplicador;
-    multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
-  }
-
-  const resto = 11 - (suma % 11);
-  const digitoCalculado = resto === 11 ? '0' : resto === 10 ? 'K' : String(resto);
-  return digitoCalculado === digitoEsperado;
-};
+import { buscarRetiranteSchema, listarRetirosSchema } from '../schemas/retiros.schema.js';
 
 const responderError = (res, error) => res.status(error.statusCode || 500).json({
   error: error.message || 'Error interno del servidor.',
 });
 
+export const buscarRetirante = async (req, res) => {
+  try {
+    const resultado = buscarRetiranteSchema.safeParse(req.query);
+    if (!resultado.success) {
+      return res.status(400).json({
+        error: 'Error de validación en los datos enviados',
+        detalles: resultado.error.issues,
+      });
+    }
+
+    const usuario = await buscarRetiranteService(resultado.data.rutRetirante);
+    return res.status(200).json({ usuario });
+  } catch (error) {
+    return responderError(res, error);
+  }
+};
+
 export const registrarRetiro = async (req, res) => {
   try {
-    const objetoId = Number(req.body?.objetoId);
-    const { nombreRetirante, rutRetirante, correoRetirante } = req.body || {};
-
-    if (!Number.isInteger(objetoId) || objetoId <= 0) {
-      return res.status(400).json({ error: 'El identificador del objeto no es válido.' });
-    }
-
-    if (!textoValido(nombreRetirante, 100) || !textoValido(rutRetirante, 20)) {
-      return res.status(400).json({ error: 'El nombre y el RUT son obligatorios.' });
-    }
-
-    if (!rutChilenoValido(rutRetirante)) {
-      return res.status(400).json({ error: 'Ingresa un RUT válido, por ejemplo 12.345.678-5.' });
-    }
-
-    if (!textoValido(correoRetirante, 150) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoRetirante.trim())) {
-      return res.status(400).json({ error: 'Ingresa un correo válido.' });
-    }
+    const {
+      objetoId,
+      rutRetirante,
+    } = req.body;
 
     const retiro = await registrarRetiroService({
       objetoId,
-      nombreRetirante: nombreRetirante.trim(),
-      rutRetirante: rutRetirante.trim().replace(/\s/g, '').toUpperCase(),
-      correoRetirante: correoRetirante.trim().toLowerCase(),
+      rutRetirante,
       funcionarioId: req.user.id,
     });
 
@@ -70,10 +49,27 @@ export const registrarRetiro = async (req, res) => {
   }
 };
 
-export const listarRetiros = async (_req, res) => {
+export const listarRetiros = async (req, res) => {
   try {
-    const retiros = await listarRetirosService();
-    return res.status(200).json({ retiros });
+    const resultado = listarRetirosSchema.safeParse(req.query);
+    if (!resultado.success) {
+      return res.status(400).json({
+        error: 'Error de validación en los datos enviados',
+        detalles: resultado.error.issues,
+      });
+    }
+
+    const resultadoBusqueda = await listarRetirosService(resultado.data);
+    return res.status(200).json(resultadoBusqueda);
+  } catch (error) {
+    return responderError(res, error);
+  }
+};
+
+export const listarFuncionariosConRetiros = async (_req, res) => {
+  try {
+    const funcionarios = await listarFuncionariosConRetirosService();
+    return res.status(200).json({ funcionarios });
   } catch (error) {
     return responderError(res, error);
   }
