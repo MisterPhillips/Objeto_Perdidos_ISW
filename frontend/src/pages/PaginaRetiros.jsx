@@ -236,6 +236,7 @@ function PaginaRetiros() {
                     <ImagenObjeto clase="size-12 shrink-0 bg-[#e8eef1]" objeto={objeto} />
                     <span className="min-w-0 flex-1">
                       <strong className="block text-sm text-[#193449]">{objeto.descripcion}</strong>
+                      <span className="mt-1 block text-xs font-semibold text-[#31566a]">ID: {objeto.id}</span>
                       <span className="mt-1 block text-xs text-[#536d7c]">{objeto.puntoRetiro?.nombre || 'Sin punto'} · {objeto.puntoRetiro?.facultad || 'Sin facultad'}</span>
                       <span className="mt-1 block text-xs text-[#81929f]">{objeto.categoria?.nombre || 'Sin categoría'} · Registrado {formatoFecha.format(new Date(objeto.createdAt))}</span>
                     </span>
@@ -285,7 +286,8 @@ function PaginaRetiros() {
             <div className="rounded-md border border-[#dbe4e8] bg-[#f8fcfd] p-3">
               <ImagenObjeto clase="mb-3 h-28 w-full bg-[#e8eef1]" objeto={objetoSeleccionado} />
               <strong className="block text-sm text-[#193449]">{objetoSeleccionado.descripcion}</strong>
-              <span className="mt-1 block text-xs text-[#536d7c]">{objetoSeleccionado.id} · {objetoSeleccionado.puntoRetiro?.nombre}</span>
+              <span className="mt-1 block text-xs font-semibold text-[#31566a]">ID: {objetoSeleccionado.id}</span>
+              <span className="mt-1 block text-xs text-[#536d7c]">{objetoSeleccionado.puntoRetiro?.nombre}</span>
               <button className="mt-3 text-xs font-semibold text-[#1781a8] underline-offset-2 hover:underline" onClick={cambiarObjeto} type="button">
                 Cambiar objeto
               </button>
