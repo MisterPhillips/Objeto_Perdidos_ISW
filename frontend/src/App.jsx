@@ -6,6 +6,7 @@ import PaginaInicio from './pages/PaginaInicio.jsx'
 import PaginaPrincipal from './pages/PaginaPrincipal.jsx'
 import PaginaRegistro from './pages/PaginaRegistro.jsx'
 import PaginaRetiros from './pages/PaginaRetiros.jsx'
+import PaginaBitacoraRetiros from './pages/PaginaBitacoraRetiros.jsx'
 import PaginaCategorias from './pages/PaginaCategorias.jsx'
 import PaginaUsuarios from './pages/PaginaUsuarios.jsx'
 import PaginaCrearPuntoRetiro from './pages/PaginaCrearPuntoRetiro.jsx'
@@ -46,6 +47,7 @@ function App() {
         <Route element={<RutaAdministrador><PaginaUsuarios /></RutaAdministrador>} path="/admin/usuarios" />
         <Route element={<RutaAdministrador><PaginaPrincipal><PaginaCrearPuntoRetiro /></PaginaPrincipal></RutaAdministrador>} path="/admin/puntos-retiro/nuevo" />
         <Route element={<RutaFuncionario><PaginaPrincipal><PaginaRetiros /></PaginaPrincipal></RutaFuncionario>} path="/funcionario/retiros" />
+        <Route element={<RutaFuncionario><PaginaPrincipal><PaginaBitacoraRetiros /></PaginaPrincipal></RutaFuncionario>} path="/funcionario/bitacora-retiros" />
         <Route element={<RutaAutenticada><PaginaPrincipal><PaginaInicio /></PaginaPrincipal></RutaAutenticada>} path="/inicio" />
         <Route element={<RutaAutenticada><PaginaPrincipal><MapaInteractivo /></PaginaPrincipal></RutaAutenticada>} path="/app/mapa" />
         <Route element={<RutaAutenticada><Navigate replace to="/app/mapa" /></RutaAutenticada>} path="/app/puntos-retiro" />
