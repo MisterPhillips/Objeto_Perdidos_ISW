@@ -1,10 +1,41 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AlertCircle, CheckCircle2, Filter, Search, UserCheck } from 'lucide-react'
-import { apiRequest } from '../config/apiClient.js'
+import { apiRequest, apiRequestBlob } from '../config/apiClient.js'
 import { formatearRut } from '../utils/rut.js'
 
 const campoClase = 'h-10 w-full rounded border border-[#cbd8df] bg-white px-3 text-sm outline-none transition focus:border-[#1781a8] focus:ring-2 focus:ring-[#1781a8]/10'
 const formatoFecha = new Intl.DateTimeFormat('es-CL', { day: 'numeric', month: 'short' })
+
+function ImagenObjeto({ objeto, clase = '' }) {
+  const [imagenCargada, setImagenCargada] = useState({ clave: '', url: '', error: '' })
+  const clave = `${objeto?.id}:${objeto?.imagen}`
+
+  useEffect(() => {
+    if (!objeto?.imagen) return undefined
+
+    let vigente = true
+    let urlTemporal = ''
+    apiRequestBlob(`/objeto/${objeto.id}/imagen`).then((blob) => {
+      if (!vigente) return
+      urlTemporal = URL.createObjectURL(blob)
+      setImagenCargada({ clave, url: urlTemporal, error: '' })
+    }).catch((requestError) => {
+      if (vigente) setImagenCargada({ clave, url: '', error: requestError.message || 'No se pudo cargar la imagen.' })
+    })
+
+    return () => {
+      vigente = false
+      if (urlTemporal) URL.revokeObjectURL(urlTemporal)
+    }
+  }, [objeto?.id, objeto?.imagen, clave])
+
+  if (!objeto?.imagen) return null
+  if (imagenCargada.clave !== clave) return null
+  if (imagenCargada.error) return <span className="text-xs text-[#963d38]">{imagenCargada.error}</span>
+  if (!imagenCargada.url) return null
+
+  return <img alt={`Fotografía del objeto: ${objeto.descripcion}`} className={`rounded object-contain ${clase}`} src={imagenCargada.url} />
+}
 
 function PaginaRetiros() {
   const [busqueda, setBusqueda] = useState('')
@@ -195,6 +226,7 @@ function PaginaRetiros() {
                 .map((objeto) => (
                 <button className={`rounded-md border p-3 text-left transition ${objetoSeleccionado?.id === objeto.id ? 'border-[#1781a8] bg-[#eaf6fb]' : 'border-[#dbe4e8] hover:border-[#8fc8da] hover:bg-[#f8fcfd]'}`} key={objeto.id} onClick={() => { setObjetoSeleccionado(objeto); setRetirante(null); setIdentidadVerificada(false); setError('') }} type="button">
                   <span className="flex items-start justify-between gap-3">
+                    <ImagenObjeto clase="size-12 shrink-0 bg-[#e8eef1]" objeto={objeto} />
                     <span>
                       <strong className="block text-sm text-[#193449]">{objeto.descripcion}</strong>
                       <span className="mt-1 block text-xs text-[#536d7c]">{objeto.puntoRetiro?.nombre || 'Sin punto'} · {objeto.puntoRetiro?.facultad || 'Sin facultad'}</span>
@@ -244,6 +276,7 @@ function PaginaRetiros() {
           <p className="mb-2 mt-5 text-[10px] font-bold uppercase tracking-[.12em] text-[#658090]">Objeto</p>
           {objetoSeleccionado ? (
             <div className="rounded-md border border-[#dbe4e8] bg-[#f8fcfd] p-3">
+              <ImagenObjeto clase="mb-3 h-28 w-full bg-[#e8eef1]" objeto={objetoSeleccionado} />
               <strong className="block text-sm text-[#193449]">{objetoSeleccionado.descripcion}</strong>
               <span className="mt-1 block text-xs text-[#536d7c]">{objetoSeleccionado.id} · {objetoSeleccionado.puntoRetiro?.nombre}</span>
               <button className="mt-3 text-xs font-semibold text-[#1781a8] underline-offset-2 hover:underline" onClick={cambiarObjeto} type="button">
