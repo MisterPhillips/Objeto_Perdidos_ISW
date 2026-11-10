@@ -22,3 +22,11 @@ export const registrarRetiroSchema = z.object({
 });
 
 export const buscarRetiranteSchema = z.object({ rutRetirante });
+
+export const listarRetirosSchema = z.object({
+  busqueda: z.string().trim().max(100).optional().default(''),
+  funcionarioId: objetoId.optional(),
+  diasDesde: z.coerce.number().int().positive().max(3650).optional(),
+  pagina: z.coerce.number().int().positive().optional().default(1),
+  limite: z.coerce.number().int().positive().max(50).optional().default(6),
+});
