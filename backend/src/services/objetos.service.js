@@ -171,7 +171,12 @@ export const actualizarDocumento = async (objetoId, datos) => {
 //////////////////// CATÁLOGO CONSOLIDADO ////////////////////
 
 export const obtenerCatalogo = async (filtros) => {
-  const { facultad, categoriaId } = filtros;
+  const { facultad, categoriaId, busqueda, limite } = filtros;
+  const termino = typeof busqueda === 'string' ? busqueda.trim() : '';
+  const limiteSolicitado = Number(limite);
+  const take = Number.isInteger(limiteSolicitado) && limiteSolicitado > 0
+    ? Math.min(limiteSolicitado, 20)
+    : undefined;
 
   const where = {
     estado: {
@@ -193,6 +198,15 @@ export const obtenerCatalogo = async (filtros) => {
     where.categoriaId = Number(categoriaId);//si se indica la categoría en los filtros, se agregará a la condición where para filtrar los objetos por la categoría
   }
 
+  if (termino) {
+    where.OR = [
+      { descripcion: { contains: termino, mode: 'insensitive' } },
+      { categoria: { nombre: { contains: termino, mode: 'insensitive' } } },
+      { puntoRetiro: { nombre: { contains: termino, mode: 'insensitive' } } },
+      { puntoRetiro: { facultad: { contains: termino, mode: 'insensitive' } } },
+    ];
+  }
+
   const objetos = await prisma.objeto.findMany({
     where,
     include: {
@@ -202,6 +216,7 @@ export const obtenerCatalogo = async (filtros) => {
     orderBy: {
       createdAt: 'desc', //los objetos se ordenan por fecha de creación, de más reciente a más antiguo
     },
+    ...(take ? { take } : {}),
   });
 
   return objetos;
