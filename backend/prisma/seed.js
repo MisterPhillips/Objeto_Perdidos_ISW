@@ -95,6 +95,10 @@ const obtenerOCrearObjeto = async (datos, registradoPorId) => {
   });
 
   if (objetoExistente) {
+    await prisma.retiro.deleteMany({
+      where: { objetoId: objetoExistente.id },
+    });
+
     return prisma.objeto.update({
       where: { id: objetoExistente.id },
       data: {
