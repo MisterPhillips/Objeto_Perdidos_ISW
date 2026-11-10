@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   Building2,
   ClipboardList,
+  ClipboardCheck,
   House,
   LogOut,
   MapPin,
@@ -19,6 +20,7 @@ const secciones = [
   { label: 'Objetos encontrados', path: '/app/objetos', icon: PackageSearch },
   { label: 'Mapa interactivo', path: '/app/mapa', icon: MapPin },
   { label: 'Registrar entregas', path: '/funcionario/retiros', icon: ClipboardList, funcionario: true },
+  { label: 'Bitácora de entregas', path: '/funcionario/bitacora-retiros', icon: ClipboardCheck, funcionario: true },
 ]
 
 const seccionesAdministracion = [
