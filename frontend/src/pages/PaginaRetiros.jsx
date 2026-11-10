@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AlertCircle, CheckCircle2, Filter, Search, UserCheck } from 'lucide-react'
 import { apiRequest } from '../config/apiClient.js'
 import { formatearRut } from '../utils/rut.js'
@@ -13,7 +13,9 @@ function PaginaRetiros() {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('')
   const [puntoRetiroSeleccionado, setPuntoRetiroSeleccionado] = useState('')
   const [antiguedadSeleccionada, setAntiguedadSeleccionada] = useState('')
+  const [limiteResultados, setLimiteResultados] = useState(12)
   const [objetos, setObjetos] = useState([])
+  const [totalObjetos, setTotalObjetos] = useState(0)
   const [objetoSeleccionado, setObjetoSeleccionado] = useState(null)
   const [rutRetirante, setRutRetirante] = useState('')
   const [retirante, setRetirante] = useState(null)
@@ -24,6 +26,14 @@ function PaginaRetiros() {
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
   const campoBusquedaRef = useRef(null)
+  const posicionAntesDeCargarRef = useRef(null)
+
+  useLayoutEffect(() => {
+    if (posicionAntesDeCargarRef.current === null) return
+
+    window.scrollTo(0, posicionAntesDeCargarRef.current)
+    posicionAntesDeCargarRef.current = null
+  }, [objetos])
 
   useEffect(() => {
     let vigente = true
@@ -55,16 +65,20 @@ function PaginaRetiros() {
       try {
         const parametros = new URLSearchParams({
           busqueda: termino,
-          limite: '12',
+          limite: String(limiteResultados),
         })
         if (categoriaSeleccionada) parametros.set('categoriaId', categoriaSeleccionada)
         if (puntoRetiroSeleccionado) parametros.set('puntoRetiroId', puntoRetiroSeleccionado)
         if (antiguedadSeleccionada) parametros.set('diasDesde', antiguedadSeleccionada)
         const catalogo = await apiRequest(`/objeto?${parametros.toString()}`)
-        if (vigente) setObjetos(catalogo.objetos)
+        if (vigente) {
+          setObjetos(catalogo.objetos)
+          setTotalObjetos(catalogo.total)
+        }
       } catch (requestError) {
         if (vigente) {
           setObjetos([])
+          setTotalObjetos(0)
           setError(requestError.message || 'No se pudieron buscar objetos.')
         }
       } finally {
@@ -76,7 +90,7 @@ function PaginaRetiros() {
       vigente = false
       clearTimeout(temporizador)
     }
-  }, [antiguedadSeleccionada, busqueda, categoriaSeleccionada, puntoRetiroSeleccionado])
+  }, [antiguedadSeleccionada, busqueda, categoriaSeleccionada, limiteResultados, puntoRetiroSeleccionado])
 
   async function verificarRetirante(event) {
     event.preventDefault()
@@ -147,7 +161,7 @@ function PaginaRetiros() {
               <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-3 text-[#6e8998]" size={16} />
               <input ref={campoBusquedaRef} autoComplete="off" className={`${campoClase} pl-9`} id="busquedaObjeto" placeholder="Comienza a escribir para buscar..." value={busqueda} onChange={(event) => { const valor = event.target.value; setBusqueda(valor); setError(''); if (valor.trim().length < 2) setObjetos([]) }} />
             </div>
-            <p className="m-0 mt-2 text-xs text-[#81929f]">La búsqueda se actualiza automáticamente y muestra hasta 12 resultados.</p>
+            <p className="m-0 mt-2 text-xs text-[#81929f]">La búsqueda se actualiza automáticamente y muestra hasta {limiteResultados} resultados.</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Filter aria-hidden="true" className="text-[#6e8998]" size={15} />
               <select aria-label="Filtrar por categoría" className="h-8 rounded border border-[#cbd8df] bg-white px-2 text-xs text-[#31566a]" value={categoriaSeleccionada} onChange={(event) => setCategoriaSeleccionada(event.target.value)}>
@@ -184,6 +198,16 @@ function PaginaRetiros() {
                 </button>
                 ))}
             </div>
+            {objetos.length > 0 && !objetoSeleccionado && (
+              <div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-[#687f8d]">
+                <span>Mostrando {objetos.length} de {totalObjetos} resultados.</span>
+                {limiteResultados < totalObjetos && (
+                  <button className="rounded border border-[#cbd8df] bg-white px-3 py-1.5 font-semibold text-[#31566a] hover:bg-[#f3f8fa]" onClick={(event) => { posicionAntesDeCargarRef.current = window.scrollY; event.currentTarget.blur(); setLimiteResultados((actual) => Math.min(actual + 8, 100)) }} type="button">
+                    Ver más resultados
+                  </button>
+                )}
+              </div>
+            )}
           </section>
 
           <section className={`rounded-md border bg-white p-5 ${objetoSeleccionado ? 'border-[#dbe4e8]' : 'border-dashed border-[#c9d9e0]'}`}>
