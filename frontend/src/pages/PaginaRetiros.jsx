@@ -188,7 +188,7 @@ function PaginaRetiros() {
             </div>
 
             {buscandoObjetos && <p className="mt-5 text-sm text-[#687f8d]" role="status">Buscando objetos disponibles...</p>}
-            {!buscandoObjetos && busqueda.trim().length >= 2 && objetos.length === 0 && <p className="mt-5 rounded border border-[#eadcb8] bg-[#fffaf0] px-3 py-2.5 text-sm text-[#805d23]" role="status">No encontramos objetos disponibles. Prueba con otra palabra o ubicación.</p>}
+            {!buscandoObjetos && busqueda.trim().length >= 2 && objetos.length === 0 && <p className="mt-5 rounded border border-[#eadcb8] bg-[#fffaf0] px-3 py-2.5 text-sm text-[#805d23]" role="status">No encontramos objetos disponibles.</p>}
             <div className="mt-4 grid gap-2">
               {objetos
                 .filter((objeto) => !objetoSeleccionado || objeto.id === objetoSeleccionado.id)
