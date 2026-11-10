@@ -3,42 +3,24 @@ import {
   registrarRetiro as registrarRetiroService,
 } from '../services/retiros.service.js';
 
-import { normalizarRutChileno, rutChilenoValido } from '../utils/rut.js'
-
-const textoValido = (valor, maximo) => (
-  typeof valor === 'string' && valor.trim().length > 0 && valor.trim().length <= maximo
-);
-
 const responderError = (res, error) => res.status(error.statusCode || 500).json({
   error: error.message || 'Error interno del servidor.',
 });
 
 export const registrarRetiro = async (req, res) => {
   try {
-    const objetoId = Number(req.body?.objetoId);
-    const { nombreRetirante, rutRetirante, correoRetirante } = req.body || {};
-
-    if (!Number.isInteger(objetoId) || objetoId <= 0) {
-      return res.status(400).json({ error: 'El identificador del objeto no es válido.' });
-    }
-
-    if (!textoValido(nombreRetirante, 100) || !textoValido(rutRetirante, 20)) {
-      return res.status(400).json({ error: 'El nombre y el RUT son obligatorios.' });
-    }
-
-    if (!rutChilenoValido(rutRetirante)) {
-      return res.status(400).json({ error: 'Ingresa un RUT válido, por ejemplo 12.345.678-5.' });
-    }
-
-    if (!textoValido(correoRetirante, 150) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoRetirante.trim())) {
-      return res.status(400).json({ error: 'Ingresa un correo válido.' });
-    }
+    const {
+      objetoId,
+      nombreRetirante,
+      rutRetirante,
+      correoRetirante,
+    } = req.body;
 
     const retiro = await registrarRetiroService({
       objetoId,
-      nombreRetirante: nombreRetirante.trim(),
-      rutRetirante: normalizarRutChileno(rutRetirante),
-      correoRetirante: correoRetirante.trim().toLowerCase(),
+      nombreRetirante,
+      rutRetirante,
+      correoRetirante,
       funcionarioId: req.user.id,
     });
 
