@@ -32,6 +32,7 @@ model Usuario {
   rol        RolUsuario @default(ESTUDIANTE)
   activo     Boolean    @default(true)
   nombre     String     @db.VarChar(100)
+  rut        String    @unique @db.VarChar(12)
   correo     String     @unique @db.VarChar(150)
   contrasena String     @db.VarChar(255)
   createdAt  DateTime   @default(now())
@@ -76,10 +77,13 @@ model PuntoRetiro {
 model Objeto {
   id              Int          @id @default(autoincrement())
   descripcion     String       @db.VarChar(150)
+  imagen          String?      @db.VarChar(255)
   estado          EstadoObjeto @default(DISPONIBLE)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   objetoPrivado   Boolean      @default(false)
+  nombrePropietario String?    @db.VarChar(100)
+  rutPropietario    String?    @db.VarChar(20)
   
 
   categoriaId     Int
