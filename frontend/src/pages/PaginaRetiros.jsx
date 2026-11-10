@@ -121,7 +121,13 @@ function PaginaRetiros() {
           rutRetirante,
         }),
       })
-      setObjetos((actuales) => actuales.filter((objeto) => objeto.id !== objetoSeleccionado.id))
+      setBusqueda('')
+      setCategoriaSeleccionada('')
+      setPuntoRetiroSeleccionado('')
+      setAntiguedadSeleccionada('')
+      setLimiteResultados(12)
+      setObjetos([])
+      setTotalObjetos(0)
       setObjetoSeleccionado(null)
       setRutRetirante('')
       setRetirante(null)
