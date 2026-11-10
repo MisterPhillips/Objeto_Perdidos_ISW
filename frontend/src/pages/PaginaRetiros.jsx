@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
-import { AlertCircle, CheckCircle2, ClipboardCheck, History, PackageOpen, RefreshCw } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ClipboardCheck, RefreshCw } from 'lucide-react'
 import { apiRequest } from '../config/apiClient.js'
 import { formatearRut } from '../utils/rut.js'
 
 const campoClase = 'h-10 w-full rounded border border-[#cbd8df] bg-white px-3 text-sm outline-none focus:border-[#1781a8]'
-const formatoFecha = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium', timeStyle: 'short' })
 const formularioInicial = {
   objetoId: '',
   nombreRetirante: '',
@@ -15,7 +14,6 @@ const formularioInicial = {
 
 function PaginaRetiros() {
   const [objetos, setObjetos] = useState([])
-  const [retiros, setRetiros] = useState([])
   const [formulario, setFormulario] = useState(formularioInicial)
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
@@ -26,12 +24,8 @@ function PaginaRetiros() {
     setCargando(true)
     setError('')
     try {
-      const [catalogo, historial] = await Promise.all([
-        apiRequest('/objeto'),
-        apiRequest('/retiros'),
-      ])
+      const catalogo = await apiRequest('/objeto')
       setObjetos(catalogo.objetos)
-      setRetiros(historial.retiros)
     } catch (requestError) {
       setError(requestError.message || 'No se pudo cargar la información de entregas.')
     } finally {
@@ -44,13 +38,9 @@ function PaginaRetiros() {
 
     async function cargarDatosIniciales() {
       try {
-        const [catalogo, historial] = await Promise.all([
-          apiRequest('/objeto'),
-          apiRequest('/retiros'),
-        ])
+        const catalogo = await apiRequest('/objeto')
         if (!vigente) return
         setObjetos(catalogo.objetos)
-        setRetiros(historial.retiros)
       } catch (requestError) {
         if (vigente) setError(requestError.message || 'No se pudo cargar la información de entregas.')
       } finally {
@@ -89,7 +79,7 @@ function PaginaRetiros() {
         }),
       })
       setFormulario(formularioInicial)
-      setAviso('Entrega registrada correctamente y agregada a la bitácora.')
+      setAviso('Entrega registrada correctamente.')
       await cargarDatos()
     } catch (requestError) {
       setError(requestError.message || 'No se pudo registrar la entrega.')
@@ -99,9 +89,8 @@ function PaginaRetiros() {
   }
 
   return (
-    <section aria-label="Registro de entregas" className="mt-7 grid gap-7">
-      <div className="grid gap-7 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-        <form className="rounded-md border border-[#dbe4e8] bg-white p-5" onSubmit={registrarEntrega}>
+    <section aria-label="Registro de entregas" className="mt-7">
+      <form className="rounded-md border border-[#dbe4e8] bg-white p-5" onSubmit={registrarEntrega}>
           <div className="mb-5 flex items-start gap-3 border-b border-[#e7edef] pb-4">
             <span className="grid size-9 place-items-center rounded-md bg-[#e9f4f8] text-[#16769c]"><ClipboardCheck size={18} /></span>
             <div>
@@ -159,28 +148,7 @@ function PaginaRetiros() {
               {guardando ? 'Registrando...' : 'Registrar entrega'}
             </button>
           </div>
-        </form>
-
-        <section className="rounded-md border border-[#dbe4e8] bg-white p-5">
-          <div className="mb-5 flex items-start gap-3 border-b border-[#e7edef] pb-4">
-            <span className="grid size-9 place-items-center rounded-md bg-[#e9f4f8] text-[#16769c]"><History size={18} /></span>
-            <div>
-              <h2 className="m-0 text-base font-semibold text-[#193449]">Bitácora de retiros</h2>
-              <p className="m-0 mt-1 text-xs text-[#687f8d]">Historial privado de entregas realizadas.</p>
-            </div>
-          </div>
-          {cargando ? <p className="text-sm text-[#687f8d]">Cargando historial...</p> : retiros.length === 0 ? (
-            <div className="py-10 text-center text-sm text-[#687f8d]"><PackageOpen className="mx-auto mb-2 text-[#7b929f]" size={24} />Aún no hay entregas registradas.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-155 border-collapse text-left text-xs">
-                <thead><tr className="border-b border-[#dbe4e8] text-[#658090]"><th className="px-3 py-2 font-semibold">Objeto</th><th className="px-3 py-2 font-semibold">Retirante</th><th className="px-3 py-2 font-semibold">Contacto</th><th className="px-3 py-2 font-semibold">Fecha</th></tr></thead>
-                <tbody>{retiros.map((retiro) => <tr className="border-b border-[#edf2f4] text-[#31566a]" key={retiro.id}><td className="px-3 py-3 font-semibold">{retiro.objeto?.descripcion}</td><td className="px-3 py-3">{retiro.nombreRetirante}<br /><span className="text-[#81929f]">{retiro.rutRetirante}</span></td><td className="px-3 py-3">{retiro.correoRetirante}</td><td className="px-3 py-3 whitespace-nowrap">{formatoFecha.format(new Date(retiro.fechaRetiro))}</td></tr>)}</tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      </div>
+      </form>
     </section>
   )
 }
