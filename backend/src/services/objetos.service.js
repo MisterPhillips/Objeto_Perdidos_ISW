@@ -182,7 +182,7 @@ export const obtenerCatalogo = async (filtros) => {
   const termino = typeof busqueda === 'string' ? busqueda.trim() : '';
   const limiteSolicitado = Number(limite);
   const take = Number.isInteger(limiteSolicitado) && limiteSolicitado > 0
-    ? Math.min(limiteSolicitado, 20)
+    ? Math.min(limiteSolicitado, 100)
     : undefined;
   const diasSolicitados = Number(diasDesde);
   const fechaDesde = Number.isInteger(diasSolicitados) && diasSolicitados > 0
@@ -226,19 +226,22 @@ export const obtenerCatalogo = async (filtros) => {
     ];
   }
 
-  const objetos = await prisma.objeto.findMany({
-    where,
-    include: {
-      categoria: true,
-      puntoRetiro: true,
-    },
-    orderBy: {
-      createdAt: 'desc', //los objetos se ordenan por fecha de creación, de más reciente a más antiguo
-    },
-    ...(take ? { take } : {}),
-  });
+  const [objetos, total] = await prisma.$transaction([
+    prisma.objeto.findMany({
+      where,
+      include: {
+        categoria: true,
+        puntoRetiro: true,
+      },
+      orderBy: {
+        createdAt: 'desc', //los objetos se ordenan por fecha de creación, de más reciente a más antiguo
+      },
+      ...(take ? { take } : {}),
+    }),
+    prisma.objeto.count({ where }),
+  ]);
 
-  return objetos;
+  return { objetos, total };
 };
 
 export const obtenerObjetosGestion = async () => prisma.objeto.findMany({
