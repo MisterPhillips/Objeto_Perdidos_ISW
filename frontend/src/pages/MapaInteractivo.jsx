@@ -62,11 +62,11 @@ function MapaInteractivo() {
 				<div className="mb-4 flex justify-end">
 					<button
 						className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b4263] px-4 text-xs font-semibold text-white hover:bg-[#155779]"
-						onClick={() => navigate('/admin/puntos-retiro/nuevo')}
+						onClick={() => navigate('/admin/puntos-retiro')}
 						type="button"
 					>
 						<Building2 aria-hidden="true" size={16} />
-						Agregar punto de retiro
+						Gestionar puntos de retiro
 					</button>
 				</div>
 			)}
