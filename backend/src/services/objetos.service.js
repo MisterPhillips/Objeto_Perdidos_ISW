@@ -207,14 +207,6 @@ export const obtenerCatalogo = async (filtros) => {
   return objetos;
 };
 
-export const obtenerObjetosGestion = async () => prisma.objeto.findMany({
-  include: {
-    categoria: true,
-    puntoRetiro: true,
-  },
-  orderBy: { createdAt: 'desc' },
-});
-
 export const actualizarObjeto = async (objetoId, datos) => {
   const objeto = await prisma.objeto.findUnique({
     where: { id: objetoId },
