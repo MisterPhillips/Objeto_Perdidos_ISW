@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, LockKeyhole, Mail, UserRound, UserRoundPlus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { register } from '../services/authService.js'
+import { formatearRut } from '../utils/rut.js'
 
 function CampoContrasena({ id, label, onChange, placeholder, value }) {
   const [isVisible, setIsVisible] = useState(false)
@@ -38,6 +39,7 @@ function CampoContrasena({ id, label, onChange, placeholder, value }) {
 
 function FormularioRegistro() {
   const [nombre, setNombre] = useState('')
+  const [rut, setRut] = useState('')
   const [correo, setCorreo] = useState('')
   const [contrasena, setContrasena] = useState('')
   const [confirmacion, setConfirmacion] = useState('')
@@ -60,6 +62,7 @@ function FormularioRegistro() {
     try {
       const result = await register({
         nombre: nombre.trim(),
+        rut,
         correo: correo.trim(),
         contrasena,
       })
@@ -95,6 +98,25 @@ function FormularioRegistro() {
               placeholder="Escribe tu nombre"
               required
               value={nombre}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-[#334b5d]" htmlFor="rut">RUT</label>
+          <div className="flex h-11.75 items-center gap-2.75 rounded-xl border border-[#dce6ec] bg-white px-3.25 shadow-[0_4px_12px_rgb(20_49_70/5%)] transition-[border-color,box-shadow] focus-within:border-[#6ab5d9] focus-within:shadow-[0_0_0_3px_rgb(22_136_199/12%)]">
+            <UserRound className="shrink-0 text-[#236b98]" size={17} aria-hidden="true" />
+            <input
+              autoComplete="off"
+              className="h-full w-full min-w-0 border-0 bg-transparent text-[13px] text-[#183247] outline-none placeholder:text-[#9aaab5]"
+              id="rut"
+              inputMode="numeric"
+              maxLength={12}
+              onChange={(event) => setRut(formatearRut(event.target.value))}
+              pattern="[0-9]{1,2}\.?[0-9]{3}\.?[0-9]{3}-[0-9Kk]"
+              placeholder="12.345.678-5"
+              required
+              value={rut}
             />
           </div>
         </div>
