@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { AlertCircle, Building2, Clock3, MapPin, Search, X } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import MapaCampus from '../components/MapaCampus.jsx'
@@ -35,6 +36,20 @@ function MapaInteractivo() {
 	const puntosConCoordenadas = puntosRetiro.filter(
 		(punto) => Number.isFinite(punto.latitud) && Number.isFinite(punto.longitud),
 	)
+
+	useEffect(() => {
+		if (!puntoSeleccionado) return undefined
+
+		const overflowAnteriorHtml = document.documentElement.style.overflow
+		const overflowAnteriorBody = document.body.style.overflow
+		document.documentElement.style.overflow = 'hidden'
+		document.body.style.overflow = 'hidden'
+
+		return () => {
+			document.documentElement.style.overflow = overflowAnteriorHtml
+			document.body.style.overflow = overflowAnteriorBody
+		}
+	}, [puntoSeleccionado])
 
 	return (
 		<>
