@@ -10,6 +10,7 @@ import PaginaBitacoraRetiros from './pages/PaginaBitacoraRetiros.jsx'
 import PaginaCategorias from './pages/PaginaCategorias.jsx'
 import PaginaUsuarios from './pages/PaginaUsuarios.jsx'
 import PaginaCrearPuntoRetiro from './pages/PaginaCrearPuntoRetiro.jsx'
+import PaginaPuntosRetiro from './pages/PaginaPuntosRetiro.jsx'
 import { getSessionToken, getSessionUser } from './services/sessionService.js'
 
 function RutaAdministrador({ children }) {
@@ -45,6 +46,7 @@ function App() {
         <Route element={<PaginaRegistro />} path="/registro" />
         <Route element={<RutaAdministrador><PaginaPrincipal><PaginaCategorias /></PaginaPrincipal></RutaAdministrador>} path="/admin/categorias" />
         <Route element={<RutaAdministrador><PaginaUsuarios /></RutaAdministrador>} path="/admin/usuarios" />
+        <Route element={<RutaAdministrador><PaginaPrincipal><PaginaPuntosRetiro /></PaginaPrincipal></RutaAdministrador>} path="/admin/puntos-retiro" />
         <Route element={<RutaAdministrador><PaginaPrincipal><PaginaCrearPuntoRetiro /></PaginaPrincipal></RutaAdministrador>} path="/admin/puntos-retiro/nuevo" />
         <Route element={<RutaFuncionario><PaginaPrincipal><PaginaRetiros /></PaginaPrincipal></RutaFuncionario>} path="/funcionario/retiros" />
         <Route element={<RutaFuncionario><PaginaPrincipal><PaginaBitacoraRetiros /></PaginaPrincipal></RutaFuncionario>} path="/funcionario/bitacora-retiros" />
