@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { AlertCircle, Building2, Clock3, MapPin, Search, X } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import MapaCampus from '../components/MapaCampus.jsx'
@@ -36,6 +37,20 @@ function MapaInteractivo() {
 		(punto) => Number.isFinite(punto.latitud) && Number.isFinite(punto.longitud),
 	)
 
+	useEffect(() => {
+		if (!puntoSeleccionado) return undefined
+
+		const overflowAnteriorHtml = document.documentElement.style.overflow
+		const overflowAnteriorBody = document.body.style.overflow
+		document.documentElement.style.overflow = 'hidden'
+		document.body.style.overflow = 'hidden'
+
+		return () => {
+			document.documentElement.style.overflow = overflowAnteriorHtml
+			document.body.style.overflow = overflowAnteriorBody
+		}
+	}, [puntoSeleccionado])
+
 	return (
 		<>
 			{location.state?.aviso && (
@@ -47,11 +62,11 @@ function MapaInteractivo() {
 				<div className="mb-4 flex justify-end">
 					<button
 						className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b4263] px-4 text-xs font-semibold text-white hover:bg-[#155779]"
-						onClick={() => navigate('/admin/puntos-retiro/nuevo')}
+						onClick={() => navigate('/admin/puntos-retiro')}
 						type="button"
 					>
 						<Building2 aria-hidden="true" size={16} />
-						Agregar punto de retiro
+						Gestionar puntos de retiro
 					</button>
 				</div>
 			)}
