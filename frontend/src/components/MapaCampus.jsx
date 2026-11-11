@@ -1,5 +1,5 @@
 import L from 'leaflet'
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import { MapContainer, Marker, Popup, TileLayer, Tooltip } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
 const centroCampus = [-36.8231422, -73.0125121]
@@ -56,6 +56,9 @@ function MapaCampus({ puntosRetiro, onAbrirPunto }) {
 						position={[punto.latitud, punto.longitud]}
 						title={punto.nombre}
 					>
+						<Tooltip className="border-0 bg-white/95 px-1.5 py-0.5 text-[10px] font-semibold text-[#193449] shadow-md" direction="bottom" offset={[0, 8]} permanent>
+							{punto.nombre}
+						</Tooltip>
 						<Popup>
 							<div className="min-w-52">
 								<h3 className="m-0 text-sm font-semibold text-[#193449]">{punto.nombre}</h3>

@@ -26,7 +26,7 @@ const secciones = [
 const seccionesAdministracion = [
   { label: 'Categorías', path: '/admin/categorias', icon: Tags },
   { label: 'Usuarios', path: '/admin/usuarios', icon: Users },
-  { label: 'Agregar punto de retiro', path: '/admin/puntos-retiro/nuevo', icon: Building2 },
+  { label: 'Gestionar puntos de retiro', path: '/admin/puntos-retiro', icon: Building2 },
 ]
 
 function PaginaPrincipal({ children }) {
@@ -39,7 +39,7 @@ function PaginaPrincipal({ children }) {
     ? [...seccionesVisibles, ...seccionesAdministracion]
     : seccionesVisibles
   const seccionActiva = enlacesVisibles.find(({ path }) => path === location.pathname)
-    || (location.pathname === '/admin/puntos-retiro/nuevo' ? seccionesAdministracion[1] : secciones[0])
+    || (location.pathname === '/admin/puntos-retiro/nuevo' ? seccionesAdministracion[2] : secciones[0])
 
   function cerrarSesion() {
     clearSession()
