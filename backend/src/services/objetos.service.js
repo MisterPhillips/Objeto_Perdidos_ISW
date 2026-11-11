@@ -36,6 +36,12 @@ export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId,
     throw error;
   }
 
+  if (categoria.nombre === 'Documento personal') {
+    const error = new Error('La categoría "Documento personal" solo se asigna al registrar documentos.');
+    error.statusCode = 400;
+    throw error;
+  }
+
   const imagen = archivoImagen ? await guardarImagen(archivoImagen) : null;
   try {
     return await prisma.objeto.create({
@@ -65,10 +71,123 @@ export const registrarObjeto = async ({ descripcion, categoriaId, puntoRetiroId,
   }
 };
 
+export const registrarDocumento = async ({
+  nombrePropietario,
+  rutPropietario,
+  descripcion,
+  puntoRetiroId,
+  registradoPorId,
+}) => {
+  const puntoRetiro = await prisma.puntoRetiro.findUnique({
+    where: { id: puntoRetiroId },
+  });
+
+  if (!puntoRetiro) {
+    const error = new Error('El punto de retiro indicado no existe.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (!puntoRetiro.habilitado) {
+    const error = new Error('El punto de retiro indicado no está habilitado.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const categoria = await prisma.categoria.findUnique({
+    where: { nombre: 'Documento personal' },
+  });
+
+  if (!categoria?.activa) {
+    const error = new Error('Debe existir una categoría activa llamada "Documento personal".');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return prisma.objeto.create({
+    data: {
+      descripcion,
+      nombrePropietario,
+      rutPropietario: rutPropietario || null,
+      estado: 'DISPONIBLE',
+      objetoPrivado: false,
+      categoriaId: categoria.id,
+      puntoRetiroId,
+      registradoPorId,
+    },
+    include: {
+      categoria: true,
+      puntoRetiro: true,
+    },
+  });
+};
+
+export const actualizarDocumento = async (objetoId, datos) => {
+  const objeto = await prisma.objeto.findUnique({
+    where: { id: objetoId },
+    include: { categoria: { select: { nombre: true } } },
+  });
+
+  if (!objeto) {
+    const error = new Error('El objeto indicado no existe.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (objeto.categoria.nombre !== 'Documento personal') {
+    const error = new Error('El objeto indicado no es un documento personal.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (objeto.estado === 'ENTREGADO') {
+    const error = new Error('No se puede editar un documento que ya fue entregado.');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const puntoRetiro = await prisma.puntoRetiro.findUnique({
+    where: { id: datos.puntoRetiroId },
+  });
+
+  if (!puntoRetiro || !puntoRetiro.habilitado) {
+    const error = new Error('El punto de retiro indicado no existe o está deshabilitado.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return prisma.objeto.update({
+    where: { id: objetoId },
+    data: {
+      nombrePropietario: datos.nombrePropietario,
+      rutPropietario: datos.rutPropietario,
+      descripcion: datos.descripcion,
+      puntoRetiroId: datos.puntoRetiroId,
+    },
+    include: { categoria: true, puntoRetiro: true },
+  });
+};
+
 //////////////////// CATÁLOGO CONSOLIDADO ////////////////////
 
 export const obtenerCatalogo = async (filtros) => {
-  const { facultad, categoriaId } = filtros;
+  const {
+    facultad,
+    categoriaId,
+    puntoRetiroId,
+    busqueda,
+    limite,
+    diasDesde,
+  } = filtros;
+  const termino = typeof busqueda === 'string' ? busqueda.trim() : '';
+  const limiteSolicitado = Number(limite);
+  const take = Number.isInteger(limiteSolicitado) && limiteSolicitado > 0
+    ? Math.min(limiteSolicitado, 100)
+    : undefined;
+  const diasSolicitados = Number(diasDesde);
+  const fechaDesde = Number.isInteger(diasSolicitados) && diasSolicitados > 0
+    ? new Date(Date.now() - diasSolicitados * 24 * 60 * 60 * 1000)
+    : undefined;
 
   const where = {
     estado: {
@@ -90,18 +209,39 @@ export const obtenerCatalogo = async (filtros) => {
     where.categoriaId = Number(categoriaId);//si se indica la categoría en los filtros, se agregará a la condición where para filtrar los objetos por la categoría
   }
 
-  const objetos = await prisma.objeto.findMany({
-    where,
-    include: {
-      categoria: true,
-      puntoRetiro: true,
-    },
-    orderBy: {
-      createdAt: 'desc', //los objetos se ordenan por fecha de creación, de más reciente a más antiguo
-    },
-  });
+  if (puntoRetiroId) {
+    where.puntoRetiroId = Number(puntoRetiroId);
+  }
 
-  return objetos;
+  if (fechaDesde) {
+    where.createdAt = { gte: fechaDesde };
+  }
+
+  if (termino) {
+    where.OR = [
+      { descripcion: { contains: termino, mode: 'insensitive' } },
+      { categoria: { nombre: { contains: termino, mode: 'insensitive' } } },
+      { puntoRetiro: { nombre: { contains: termino, mode: 'insensitive' } } },
+      { puntoRetiro: { facultad: { contains: termino, mode: 'insensitive' } } },
+    ];
+  }
+
+  const [objetos, total] = await prisma.$transaction([
+    prisma.objeto.findMany({
+      where,
+      include: {
+        categoria: true,
+        puntoRetiro: true,
+      },
+      orderBy: {
+        createdAt: 'desc', //los objetos se ordenan por fecha de creación, de más reciente a más antiguo
+      },
+      ...(take ? { take } : {}),
+    }),
+    prisma.objeto.count({ where }),
+  ]);
+
+  return { objetos, total };
 };
 
 export const obtenerObjetosGestion = async () => prisma.objeto.findMany({
@@ -113,22 +253,46 @@ export const obtenerObjetosGestion = async () => prisma.objeto.findMany({
 });
 
 export const actualizarObjeto = async (objetoId, datos) => {
-  const objeto = await prisma.objeto.findUnique({ where: { id: objetoId } });
+  const objeto = await prisma.objeto.findUnique({
+    where: { id: objetoId },
+    include: { categoria: { select: { nombre: true } } },
+  });
+
   if (!objeto) {
     const error = new Error('El objeto indicado no existe.');
     error.statusCode = 404;
     throw error;
   }
+
   if (objeto.estado === 'ENTREGADO') {
     const error = new Error('No se puede editar un objeto que ya fue entregado.');
     error.statusCode = 409;
     throw error;
   }
 
+  if (objeto.categoria.nombre === 'Documento personal') {
+    if (datos.categoriaId !== undefined && datos.categoriaId !== objeto.categoriaId) {
+      const error = new Error('La categoría de un documento personal no se puede cambiar.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (datos.objetoPrivado === true) {
+      const error = new Error('Un documento personal no puede marcarse como privado.');
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
   if (datos.categoriaId !== undefined) {
     const categoria = await prisma.categoria.findUnique({ where: { id: datos.categoriaId } });
     if (!categoria || !categoria.activa) {
       const error = new Error('La categoría indicada no existe o está inactiva.');
+      error.statusCode = 400;
+      throw error;
+    }
+    if (categoria.nombre === 'Documento personal') {
+      const error = new Error('La categoría "Documento personal" solo se asigna al registrar documentos.');
       error.statusCode = 400;
       throw error;
     }
@@ -150,15 +314,26 @@ export const actualizarObjeto = async (objetoId, datos) => {
 };
 
 export const actualizarImagenObjeto = async (objetoId, datos, archivoImagen) => {
-  const objeto = await prisma.objeto.findUnique({ where: { id: objetoId } });
+  const objeto = await prisma.objeto.findUnique({
+    where: { id: objetoId },
+    include: { categoria: { select: { nombre: true } } },
+  });
+
   if (!objeto) {
     const error = new Error('El objeto indicado no existe.');
     error.statusCode = 404;
     throw error;
   }
+  
   if (objeto.estado === 'ENTREGADO') {
     const error = new Error('No se puede editar un objeto que ya fue entregado.');
     error.statusCode = 409;
+    throw error;
+  }
+
+  if (objeto.categoria.nombre === 'Documento personal') {
+    const error = new Error('Un documento personal no puede tener una fotografía.');
+    error.statusCode = 400;
     throw error;
   }
 
