@@ -11,7 +11,7 @@ const sanitizeUser = (usuario) => ({
   updatedAt: usuario.updatedAt,
 });
 
-export const registerUserService = async ({ nombre, correo, contrasena }) => {
+export const registerUserService = async ({ nombre, correo, contrasena, rut }) => {
   const correoNormalizado = correo.trim().toLowerCase();
 
   const usuarioExistente = await prisma.usuario.findUnique({
@@ -26,22 +26,33 @@ export const registerUserService = async ({ nombre, correo, contrasena }) => {
 
   const contraseñaHasheada = await bcrypt.hash(contrasena, 10);
 
-  const nuevoUsuario = await prisma.usuario.create({
-    data: {
-      nombre,
-      correo: correoNormalizado,
-      contrasena: contraseñaHasheada,
-      rol: 'ESTUDIANTE',
-    },
-    select: {
-      id: true,
-      nombre: true,
-      correo: true,
-      rol: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+  let nuevoUsuario;
+  try {
+    nuevoUsuario = await prisma.usuario.create({
+      data: {
+        nombre,
+        rut,
+        correo: correoNormalizado,
+        contrasena: contraseñaHasheada,
+        rol: 'ESTUDIANTE',
+      },
+      select: {
+        id: true,
+        nombre: true,
+        correo: true,
+        rol: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  } catch (error) {
+    if (error.code === 'P2002' && String(error.meta?.target).includes('rut')) {
+      const rutError = new Error('Ya existe una cuenta con ese RUT.');
+      rutError.statusCode = 409;
+      throw rutError;
+    }
+    throw error;
+  }
 
   return sanitizeUser(nuevoUsuario);
 };

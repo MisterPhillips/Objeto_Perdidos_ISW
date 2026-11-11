@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, LogOut, Pencil, Plus, Search, UserRound, UserRoundX, X } from 'lucide-react'
 import { ApiError, apiRequest } from '../config/apiClient.js'
 import { clearSession, getSessionUser } from '../services/sessionService.js'
+import { formatearRut } from '../utils/rut.js'
 
-const formularioInicial = { nombre: '', correo: '', rol: 'ESTUDIANTE', contrasena: '' }
+const formularioInicial = { nombre: '', rut: '', correo: '', rol: 'ESTUDIANTE', contrasena: '' }
 const roles = ['ESTUDIANTE', 'FUNCIONARIO', 'ADMIN']
 
 function PaginaUsuarios() {
@@ -66,7 +67,7 @@ function PaginaUsuarios() {
 
   function abrirEdicion(usuario) {
     setUsuarioEditando(usuario)
-    setFormulario({ nombre: usuario.nombre, correo: usuario.correo, rol: usuario.rol, contrasena: '' })
+    setFormulario({ nombre: usuario.nombre, rut: formatearRut(usuario.rut || ''), correo: usuario.correo, rol: usuario.rol, contrasena: '' })
     setError('')
     setModalAbierto(true)
   }
@@ -116,7 +117,7 @@ function PaginaUsuarios() {
   }
 
   const usuariosFiltrados = usuarios.filter((usuario) =>
-    `${usuario.nombre} ${usuario.correo} ${usuario.rol}`.toLowerCase().includes(busqueda.toLowerCase()),
+    `${usuario.nombre} ${usuario.rut || ''} ${usuario.correo} ${usuario.rol}`.toLowerCase().includes(busqueda.toLowerCase()),
   )
   const activos = usuarios.filter((usuario) => usuario.activo).length
 
@@ -191,6 +192,7 @@ function PaginaUsuarios() {
                     <td className="px-5 py-3.5">
                       <p className="m-0 font-semibold">{usuario.nombre}</p>
                       <p className="m-0 mt-0.5 text-xs text-[#718896]">{usuario.correo}</p>
+                      <p className="m-0 mt-0.5 text-xs text-[#718896]">{usuario.rut ? formatearRut(usuario.rut) : 'RUT pendiente'}</p>
                     </td>
                     <td className="px-5 py-3.5 text-xs font-medium">{usuario.rol}</td>
                     <td className="px-5 py-3.5"><span className={`inline-flex rounded px-2 py-1 text-[11px] font-semibold ${usuario.activo ? 'bg-[#e8f5ed] text-[#24744e]' : 'bg-[#edf0f2] text-[#687783]'}`}>{usuario.activo ? 'Activa' : 'Desactivada'}</span></td>
@@ -226,6 +228,19 @@ function PaginaUsuarios() {
             <form className="mt-5 grid gap-4" onSubmit={guardarUsuario}>
               <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">Nombre
                 <input autoComplete="name" className="h-10 rounded border border-[#cbd8df] px-3 text-sm font-normal outline-none focus:border-[#1781a8]" maxLength="100" onChange={(event) => setFormulario({ ...formulario, nombre: event.target.value })} required value={formulario.nombre} />
+              </label>
+              <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">RUT
+                <input
+                  autoComplete="off"
+                  className="h-10 rounded border border-[#cbd8df] px-3 text-sm font-normal outline-none focus:border-[#1781a8]"
+                  inputMode="numeric"
+                  maxLength="12"
+                  onChange={(event) => setFormulario({ ...formulario, rut: formatearRut(event.target.value) })}
+                  pattern="[0-9]{1,2}\.?[0-9]{3}\.?[0-9]{3}-[0-9Kk]"
+                  placeholder="12.345.678-5"
+                  required
+                  value={formulario.rut}
+                />
               </label>
               <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">Correo electrónico
                 <input autoComplete="email" className="h-10 rounded border border-[#cbd8df] px-3 text-sm font-normal outline-none focus:border-[#1781a8]" maxLength="150" onChange={(event) => setFormulario({ ...formulario, correo: event.target.value })} required type="email" value={formulario.correo} />
