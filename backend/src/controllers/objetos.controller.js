@@ -8,7 +8,6 @@ import {
   registrarObjeto,
   registrarDocumento,
   obtenerCatalogo,
-  obtenerObjetosGestion,
 } from '../services/objetos.service.js';
 import {
   actualizarObjetoParamsSchema,
@@ -123,15 +122,6 @@ export const listarObjetos = async (req, res) => {
     return res.status(status).json({
       error: error.message || 'Error interno del servidor.',
     });
-  }
-};
-
-export const listarObjetosGestion = async (_req, res) => {
-  try {
-    const objetos = await obtenerObjetosGestion();
-    return res.status(200).json({ objetos });
-  } catch (error) {
-    return res.status(error.statusCode || 500).json({ error: error.message || 'Error interno del servidor.' });
   }
 };
 
