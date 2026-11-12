@@ -44,7 +44,7 @@ function App() {
         <Route element={<PaginaInicioSesion />} path="/login" />
         <Route element={<PaginaRegistro />} path="/registro" />
         <Route element={<RutaAdministrador><PaginaPrincipal><PaginaCategorias /></PaginaPrincipal></RutaAdministrador>} path="/admin/categorias" />
-        <Route element={<RutaAdministrador><PaginaUsuarios /></RutaAdministrador>} path="/admin/usuarios" />
+        <Route element={<RutaAdministrador><PaginaPrincipal><PaginaUsuarios /></PaginaPrincipal></RutaAdministrador>} path="/admin/usuarios" />
         <Route element={<RutaAdministrador><PaginaPrincipal><PaginaCrearPuntoRetiro /></PaginaPrincipal></RutaAdministrador>} path="/admin/puntos-retiro/nuevo" />
         <Route element={<RutaFuncionario><PaginaPrincipal><PaginaRetiros /></PaginaPrincipal></RutaFuncionario>} path="/funcionario/retiros" />
         <Route element={<RutaFuncionario><PaginaPrincipal><PaginaBitacoraRetiros /></PaginaPrincipal></RutaFuncionario>} path="/funcionario/bitacora-retiros" />
