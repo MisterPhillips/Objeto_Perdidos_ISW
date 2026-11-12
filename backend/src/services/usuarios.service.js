@@ -1,8 +1,6 @@
 import bcrypt from 'bcrypt';
 import prisma from '../config/prisma.js';
 
-const rolesPermitidos = ['FUNCIONARIO', 'ESTUDIANTE', 'ADMIN'];
-
 const crearError = (mensaje, statusCode) => {
 	const error = new Error(mensaje);
 	error.statusCode = statusCode;
@@ -71,8 +69,7 @@ export const actualizarUsuario = async (usuarioId, datos) => {
 	const existente = await prisma.usuario.findUnique({ where: { id: usuarioId } });
 	if (!existente) throw crearError('El usuario no existe.', 404);
 
-	const dejaraDeSerAdminActivo = existente.rol === 'ADMIN'
-		&& existente.activo
+	const dejaraDeSerAdminActivo = existente.rol === 'ADMIN'&& existente.activo
 		&& (datos.rol !== undefined && datos.rol !== 'ADMIN'
 			|| datos.activo === false);
 
@@ -88,7 +85,7 @@ export const actualizarUsuario = async (usuarioId, datos) => {
 		return await prisma.usuario.update({
 			where: { id: usuarioId },
 			data: datosActualizados,
-			select: seleccionarUsuarioPublico,
+			select: seleccionarUsuarioPublico
 		});
 	} catch (error) {
 		if (error.code === 'P2002') {
@@ -116,5 +113,3 @@ export const desactivarUsuario = async (usuarioId, administradorId) => {
 		select: seleccionarUsuarioPublico,
 	});
 };
-
-export { rolesPermitidos };
