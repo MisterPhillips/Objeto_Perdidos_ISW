@@ -1,4 +1,5 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom' 
+import { useEffect } from 'react'
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import PaginaInicioSesion from './pages/PaginaInicioSesion.jsx'
 import MapaInteractivo from './pages/MapaInteractivo.jsx'
 import PaginaObjetos from './pages/PaginaObjetos.jsx'
@@ -11,7 +12,39 @@ import PaginaCategorias from './pages/PaginaCategorias.jsx'
 import PaginaUsuarios from './pages/PaginaUsuarios.jsx'
 import PaginaCrearPuntoRetiro from './pages/PaginaCrearPuntoRetiro.jsx'
 import PaginaPuntosRetiro from './pages/PaginaPuntosRetiro.jsx'
-import { getSessionToken, getSessionUser } from './services/sessionService.js'
+import {
+  clearSession,
+  getSessionExpiration,
+  getSessionToken,
+  getSessionUser,
+} from './services/sessionService.js'
+
+function SessionExpirationGuard() {
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!getSessionToken()) return undefined
+
+    const expiresAt = getSessionExpiration()
+    const expireSession = () => {
+      clearSession()
+      if (location.pathname !== '/login') {
+        navigate('/login', { replace: true })
+      }
+    }
+
+    if (!expiresAt || expiresAt <= Date.now()) {
+      expireSession()
+      return undefined
+    }
+
+    const timeoutId = window.setTimeout(expireSession, expiresAt - Date.now())
+    return () => window.clearTimeout(timeoutId)
+  }, [location.pathname, navigate])
+
+  return null
+}
 
 function RutaAdministrador({ children }) {
   const usuario = getSessionUser()
@@ -40,6 +73,7 @@ function RutaInicial() {
 function App() {
   return (
     <BrowserRouter>
+      <SessionExpirationGuard />
       <Routes>
         <Route element={<RutaInicial />} path="/" />
         <Route element={<PaginaInicioSesion />} path="/login" />

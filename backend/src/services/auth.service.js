@@ -69,7 +69,7 @@ const generateToken = (usuario) => {
       rol: usuario.rol,
     },
     secret,
-    { expiresIn: '8h' }
+    { expiresIn: '7d' }
   );
 };
 
