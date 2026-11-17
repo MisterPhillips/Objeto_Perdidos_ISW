@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { AlertCircle, Building2, Clock3, MapPin, Search, X } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import MapaCampus from '../components/MapaCampus.jsx'
-import { useMapaInteractivo } from '../components/useMapaInteractivo.js'
+import { useMapaInteractivo } from '../hooks/useMapaInteractivo.js'
 import { getSessionUser } from '../services/sessionService.js'
 
 const formatoFecha = new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' })
