@@ -39,7 +39,7 @@ function PaginaPrincipal({ children }) {
     ? [...seccionesVisibles, ...seccionesAdministracion]
     : seccionesVisibles
   const seccionActiva = enlacesVisibles.find(({ path }) => path === location.pathname)
-    || (location.pathname === '/admin/puntos-retiro/nuevo' ? seccionesAdministracion[2] : secciones[0])
+    || secciones[0]
 
   function cerrarSesion() {
     clearSession()
