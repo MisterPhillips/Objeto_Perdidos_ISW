@@ -74,6 +74,7 @@ export const listarPuntosRetiroConCantidadObjetos = async () => {
 
 export const listarPuntosRetiroParaMapa = async () => {
 	return prisma.puntoRetiro.findMany({
+		where: { habilitado: true },
 		include: {
 			objetos: {
 				where: { objetoPrivado: false },
