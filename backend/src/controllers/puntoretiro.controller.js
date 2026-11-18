@@ -9,6 +9,21 @@ import {
 	obtenerPuntoRetiro as obtenerPuntoRetiroService,
 } from '../services/puntoretiro.service.js';
 //habilitado indica si el punto de retiro está activo o no, y se puede filtrar por este campo en la lista de puntos de retiro
+const codigosErrorConexion = new Set(['P1001', 'P1002', 'P1017', 'P2024']);
+
+const responderErrorPuntoRetiro = (res, error) => {
+	const codigo = error.code || error.errorCode;
+	if (codigosErrorConexion.has(codigo)) {
+		return res.status(503).json({
+			error: 'Ha ocurrido un error de conexión con la base de datos. Vuelve a intentarlo.',
+		});
+	}
+
+	return res.status(error.statusCode || 500).json({
+		error: error.message || 'Error interno del servidor.',
+	});
+};
+
 const obtenerIdPuntoRetiro = (id) => {
 	const puntoRetiroId = Number(id);
 	return Number.isInteger(puntoRetiroId) && puntoRetiroId > 0 ? puntoRetiroId : null;
@@ -49,9 +64,7 @@ export const listarPuntosRetiro = async (req, res) => {
 			puntosRetiro,
 		});
 	} catch (error) {
-		return res.status(error.statusCode || 500).json({
-			error: error.message || 'Error interno del servidor.',
-		});
+		return responderErrorPuntoRetiro(res, error);
 	}
 };
 
@@ -65,9 +78,7 @@ export const obtenerPuntoRetiro = async (req, res) => {
 		const puntoRetiro = await obtenerPuntoRetiroService(puntoRetiroId);
 		return res.status(200).json({ puntoRetiro });
 	} catch (error) {
-		return res.status(error.statusCode || 500).json({
-			error: error.message || 'Error interno del servidor.',
-		});
+		return responderErrorPuntoRetiro(res, error);
 	}
 };
 
@@ -102,9 +113,7 @@ export const crearPuntoRetiro = async (req, res) => {
 			puntoRetiro,
 		});
 	} catch (error) {
-		return res.status(error.statusCode || 500).json({
-			error: error.message || 'Error interno del servidor.',
-		});
+		return responderErrorPuntoRetiro(res, error);
 	}
 };
 
@@ -159,9 +168,7 @@ export const actualizarPuntoRetiro = async (req, res) => {
 			puntoRetiro,
 		});
 	} catch (error) {
-		return res.status(error.statusCode || 500).json({
-			error: error.message || 'Error interno del servidor.',
-		});
+		return responderErrorPuntoRetiro(res, error);
 	}
 };
 
@@ -178,9 +185,7 @@ export const eliminarPuntoRetiro = async (req, res) => {
 			puntoRetiro,
 		});
 	} catch (error) {
-		return res.status(error.statusCode || 500).json({
-			error: error.message || 'Error interno del servidor.',
-		});
+		return responderErrorPuntoRetiro(res, error);
 	}
 };
 
@@ -195,9 +200,7 @@ export const listarPuntosRetiroConCantidadObjetos = async (req, res) => {
 			})),
 		});
 	} catch (error) {
-		return res.status(error.statusCode || 500).json({
-			error: error.message || 'Error interno del servidor.',
-		});
+		return responderErrorPuntoRetiro(res, error);
 	}
 };
 
@@ -209,9 +212,7 @@ export const listarPuntosRetiroParaMapa = async (_req, res) => {
 			puntosRetiro,
 		});
 	} catch (error) {
-		return res.status(error.statusCode || 500).json({
-			error: error.message || 'Error interno del servidor.',
-		});
+		return responderErrorPuntoRetiro(res, error);
 	}
 };
 
@@ -225,8 +226,6 @@ export const obtenerPuntoRetiroConObjetos = async (req, res) => {
 		const puntoRetiro = await obtenerPuntoRetiroConObjetosService(puntoRetiroId);
 		return res.status(200).json({ puntoRetiro });
 	} catch (error) {
-		return res.status(error.statusCode || 500).json({
-			error: error.message || 'Error interno del servidor.',
-		});
+		return responderErrorPuntoRetiro(res, error);
 	}
 };
