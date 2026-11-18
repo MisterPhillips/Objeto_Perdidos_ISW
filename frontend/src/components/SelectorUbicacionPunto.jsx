@@ -51,7 +51,7 @@ function MarcadorUbicacion({ coordenadas }) {
 	)
 }
 
-function SelectorUbicacionPunto({ coordenadas, onActivar, onSeleccionar, seleccionActiva }) {
+function SelectorUbicacionPunto({ centro = centroCampus, coordenadas, onActivar, onSeleccionar, seleccionActiva }) {
 	return (
 		<section aria-label="Seleccionar ubicación del punto de retiro" className="mt-7 overflow-hidden rounded-lg border border-[#dbe4e8] bg-white">
 			<div className="border-b border-[#e7edef] px-4 py-4 sm:px-5">
@@ -66,7 +66,7 @@ function SelectorUbicacionPunto({ coordenadas, onActivar, onSeleccionar, selecci
 				</p>
 			</div>
 			<MapContainer
-				center={centroCampus}
+				center={centro}
 				className="relative z-0 h-90 w-full sm:h-107.5"
 				dragging
 				keyboard={false}

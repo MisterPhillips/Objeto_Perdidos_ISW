@@ -15,7 +15,7 @@ function PanelMarca({ variant = 'login' }) {
       className="relative isolate flex min-h-screen flex-col overflow-hidden bg-[#073252] px-12 py-12 text-[#f6fbff] before:pointer-events-none before:absolute before:-right-[27%] before:top-[9%] before:z-[-1] before:aspect-square before:w-[390px] before:rounded-full before:border before:border-[rgb(81_174_215_/_9%)] before:bg-[rgb(78_173_214_/_7%)] before:content-[''] after:pointer-events-none after:absolute after:-bottom-[35%] after:-left-[35%] after:z-[-1] after:aspect-square after:w-[480px] after:rounded-full after:border after:border-[rgb(81_174_215_/_9%)] after:shadow-[0_0_0_42px_rgb(78_173_214_/_4%),0_0_0_84px_rgb(78_173_214_/_3%)] after:content-[''] max-[900px]:px-8 max-[680px]:min-h-0 max-[680px]:px-[25px] max-[680px]:pt-6 max-[680px]:pb-[22px] max-[380px]:px-[19px]"
     >
       <header className="relative z-10 flex items-center gap-[13px]">
-        <span className="grid size-[46px] shrink-0 place-items-center rounded-[11px] bg-white text-[13px] font-extrabold text-[#073252]" aria-hidden="true">UBB</span>
+        <img alt="Escudo de la Universidad del Bío-Bío" className="size-[46px] shrink-0 object-contain" src="/escudo-ubb.png" />
         <div>
           <span className="mb-[3px] block text-xs text-[#b3cad9]">Universidad del Bío-Bío</span>
           <p className="m-0 text-xl font-medium">FINDUBB</p>
