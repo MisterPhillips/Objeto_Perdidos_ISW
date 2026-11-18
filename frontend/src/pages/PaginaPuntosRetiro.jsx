@@ -5,6 +5,7 @@ import SelectorUbicacionPunto from '../components/SelectorUbicacionPunto.jsx'
 import { ApiError } from '../config/apiClient.js'
 import {
 	actualizarPuntoRetiro,
+	crearPuntoRetiro,
 	deshabilitarPuntoRetiro,
 	obtenerPuntosRetiro,
 } from '../services/puntoRetiroService.js'
@@ -82,6 +83,15 @@ function PaginaPuntosRetiro() {
 		setIntentos((actuales) => actuales + 1)
 	}
 
+	function abrirNuevoPunto() {
+		setPuntoEditando(null)
+		setFormulario({ ...formularioInicial })
+		setCoordenadasTemporales(null)
+		setError('')
+		setAviso('')
+		setModalAbierto(true)
+	}
+
 	function abrirEdicion(punto) {
 		setPuntoEditando(punto)
 		setFormulario({
@@ -106,7 +116,10 @@ function PaginaPuntosRetiro() {
 
 	async function guardarPunto(event) {
 		event.preventDefault()
-		if (!puntoEditando) return
+		if (!puntoEditando && (!Number.isFinite(formulario.latitud) || !Number.isFinite(formulario.longitud))) {
+			setError('Selecciona la ubicación del punto en el mapa antes de guardar.')
+			return
+		}
 
 		setGuardando(true)
 		setError('')
@@ -121,12 +134,18 @@ function PaginaPuntosRetiro() {
 		}
 
 		try {
-			const respuesta = await actualizarPuntoRetiro(puntoEditando.id, datos)
+			const respuesta = puntoEditando
+				? await actualizarPuntoRetiro(puntoEditando.id, datos)
+				: await crearPuntoRetiro({
+					...datos,
+					latitud: formulario.latitud,
+					longitud: formulario.longitud,
+				})
 			setModalAbierto(false)
-			setAviso(`El punto "${respuesta.puntoRetiro.nombre}" fue actualizado.`)
+			setAviso(`El punto "${respuesta.puntoRetiro.nombre}" fue ${puntoEditando ? 'actualizado.' : 'creado correctamente.'}`)
 			recargarPuntos()
 		} catch (requestError) {
-			setError(requestError.message || 'No se pudo actualizar el punto de retiro.')
+			setError(requestError.message || `No se pudo ${puntoEditando ? 'actualizar' : 'crear'} el punto de retiro.`)
 		} finally {
 			setGuardando(false)
 		}
@@ -173,7 +192,7 @@ function PaginaPuntosRetiro() {
 				</div>
 				<button
 					className="inline-flex items-center gap-2 rounded-md bg-[#0b4263] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#155779]"
-					onClick={() => navigate('/admin/puntos-retiro/nuevo')}
+					onClick={abrirNuevoPunto}
 					type="button"
 				>
 					<Plus size={17} /> Nuevo punto
@@ -272,7 +291,7 @@ function PaginaPuntosRetiro() {
 						<div className="flex items-start justify-between gap-4">
 							<div>
 								<p className="m-0 text-[10px] font-bold uppercase text-[#1781a8]">PUNTO DE RETIRO</p>
-								<h2 className="mb-0 mt-1 text-xl font-semibold" id="punto-form-title">Editar punto</h2>
+								<h2 className="mb-0 mt-1 text-xl font-semibold" id="punto-form-title">{puntoEditando ? 'Editar punto' : 'Nuevo punto de retiro'}</h2>
 							</div>
 							<button aria-label="Cerrar" className="grid size-8 place-items-center rounded border border-[#d5e0e5] text-[#526b79] hover:bg-[#f3f7f9]" disabled={guardando} onClick={() => setModalAbierto(false)} type="button"><X size={16} /></button>
 						</div>
@@ -295,7 +314,7 @@ function PaginaPuntosRetiro() {
 										<p className="m-0 text-xs font-semibold text-[#31566a]">Coordenadas</p>
 										<p className="m-0 mt-1 text-xs text-[#718896]">
 											{Number.isFinite(formulario.latitud) && Number.isFinite(formulario.longitud)
-												? `${formulario.latitud.toFixed(6)}, ${formulario.longitud.toFixed(6)}`
+												? 'Ubicación seleccionada'
 												: 'Sin ubicación seleccionada'}
 										</p>
 									</div>
@@ -307,7 +326,7 @@ function PaginaPuntosRetiro() {
 							{error && <p className="m-0 text-sm text-[#963d38]" role="alert">{error}</p>}
 							<div className="mt-1 flex justify-end gap-2 border-t border-[#e7edef] pt-4">
 								<button className="rounded border border-[#cbd8df] px-4 py-2 text-sm font-semibold hover:bg-[#f3f7f9]" disabled={guardando} onClick={() => setModalAbierto(false)} type="button">Cancelar</button>
-								<button className="rounded bg-[#0b4263] px-4 py-2 text-sm font-semibold text-white hover:bg-[#155779] disabled:opacity-60" disabled={guardando} type="submit">{guardando ? 'Guardando...' : 'Guardar cambios'}</button>
+								<button className="rounded bg-[#0b4263] px-4 py-2 text-sm font-semibold text-white hover:bg-[#155779] disabled:opacity-60" disabled={guardando} type="submit">{guardando ? (puntoEditando ? 'Guardando...' : 'Creando...') : (puntoEditando ? 'Guardar cambios' : 'Crear punto')}</button>
 							</div>
 						</form>
 					</section>
@@ -333,7 +352,7 @@ function PaginaPuntosRetiro() {
 						<div className="mt-4 flex flex-wrap items-center justify-between gap-3">
 							<p className="m-0 text-xs text-[#718896]" role="status">
 								{coordenadasTemporales
-									? `Ubicación seleccionada: ${coordenadasTemporales.latitud.toFixed(6)}, ${coordenadasTemporales.longitud.toFixed(6)}`
+									? 'Ubicación seleccionada.'
 									: 'Haz clic en el mapa para seleccionar la ubicación.'}
 							</p>
 							<div className="flex gap-2">

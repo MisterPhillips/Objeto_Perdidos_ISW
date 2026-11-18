@@ -39,7 +39,7 @@ function PaginaPrincipal({ children }) {
     ? [...seccionesVisibles, ...seccionesAdministracion]
     : seccionesVisibles
   const seccionActiva = enlacesVisibles.find(({ path }) => path === location.pathname)
-    || (location.pathname === '/admin/puntos-retiro/nuevo' ? seccionesAdministracion[2] : secciones[0])
+    || secciones[0]
 
   function cerrarSesion() {
     clearSession()
@@ -84,7 +84,7 @@ function PaginaPrincipal({ children }) {
       <aside className={`fixed inset-y-0 left-0 z-30 flex w-66 flex-col bg-[#073252] text-white transition-transform duration-200 lg:translate-x-0 ${menuAbierto ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex h-20.5 shrink-0 items-center justify-between border-b border-white/10 px-5">
           <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-[9px] bg-white text-[11px] font-extrabold text-[#073252]">UBB</span>
+            <img alt="Escudo de la Universidad del Bío-Bío" className="size-10 shrink-0 object-contain" src="/escudo-ubb.png" />
             <div>
               <span className="block text-[10px] text-[#b3cad9]">Universidad del Bío-Bío</span>
               <span className="mt-0.5 block text-[17px] font-semibold tracking-[0.02em]">FINDUBB</span>
@@ -101,7 +101,6 @@ function PaginaPrincipal({ children }) {
         </div>
 
         <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-3 py-6">
-          <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7fa0b4]">Aplicación</p>
           <div className="grid gap-1">
             {seccionesVisibles.map(enlaceSeccion)}
           </div>
