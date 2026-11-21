@@ -4,6 +4,7 @@ import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from 'react-leaf
 import 'leaflet/dist/leaflet.css'
 
 const centroCampus = [-36.8231422, -73.0125121]
+const limitesUBB = L.latLngBounds([-36.8243, -73.0163], [-36.8205, -73.0095])
 const limitesCampus = [
 	[-36.827, -73.0177],
 	[-36.8193, -73.0063],
@@ -19,6 +20,11 @@ const iconoUbicacion = L.divIcon({
 function CapturadorClicMapa({ seleccionActiva, onActivar, onSeleccionar }) {
 	useMapEvents({
 		click(event) {
+			if (!limitesUBB.contains(event.latlng)) {
+				window.alert('Solo se pueden crear puntos dentro del campus de la UBB.')
+				return
+			}
+
 			if (!seleccionActiva) {
 				onActivar()
 				return

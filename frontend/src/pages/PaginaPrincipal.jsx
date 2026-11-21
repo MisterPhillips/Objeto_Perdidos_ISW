@@ -100,7 +100,7 @@ function PaginaPrincipal({ children }) {
           </button>
         </div>
 
-        <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-3 py-6">
+        <nav aria-label="Navegación principal" className="navigation-scrollbar flex-1 overflow-y-auto px-3 py-6">
           <div className="grid gap-1">
             {seccionesVisibles.map(enlaceSeccion)}
           </div>
