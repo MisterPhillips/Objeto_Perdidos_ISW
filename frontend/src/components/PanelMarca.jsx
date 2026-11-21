@@ -46,10 +46,12 @@ function PanelMarca({ variant = 'login' }) {
         </ul>
       </div>
 
-      <div className="relative z-10 flex items-center gap-[9px] text-[11px] text-[#b3cad9] max-[680px]:hidden">
-        <ShieldCheck size={15} aria-hidden="true" />
-        <span>Plataforma oficial de la Universidad del Bío-Bío</span>
-      </div>
+      {isRegister && (
+        <div className="relative z-10 flex items-center gap-[9px] text-[11px] text-[#b3cad9] max-[680px]:hidden">
+          <ShieldCheck size={15} aria-hidden="true" />
+          <span>Plataforma oficial de la Universidad del Bío-Bío</span>
+        </div>
+      )}
     </aside>
   )
 }
