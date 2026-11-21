@@ -31,10 +31,12 @@ function EstructuraAutenticacion({ children, variant = 'login' }) {
 
         <footer className="flex items-center justify-between gap-4 text-[10px] text-[#8293a0] max-[680px]:flex-wrap">
           <p className="m-0">© 2026 Universidad del Bío-Bío</p>
-          <nav className="flex gap-5" aria-label="Enlaces institucionales">
-            <a className="text-inherit no-underline hover:text-[#1688c7] hover:underline" href="https://www.ubiobio.cl/" rel="noreferrer" target="_blank">Ayuda</a>
-            <a className="text-inherit no-underline hover:text-[#1688c7] hover:underline" href="https://www.ubiobio.cl/" rel="noreferrer" target="_blank">Privacidad</a>
-          </nav>
+          {isRegister ? (
+            <nav className="flex gap-5" aria-label="Enlaces institucionales">
+              <a className="text-inherit no-underline hover:text-[#1688c7] hover:underline" href="https://www.ubiobio.cl/" rel="noreferrer" target="_blank">Ayuda</a>
+              <a className="text-inherit no-underline hover:text-[#1688c7] hover:underline" href="https://www.ubiobio.cl/" rel="noreferrer" target="_blank">Privacidad</a>
+            </nav>
+          ) : null}
         </footer>
       </section>
 
