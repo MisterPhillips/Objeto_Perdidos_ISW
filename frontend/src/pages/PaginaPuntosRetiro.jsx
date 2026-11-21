@@ -19,10 +19,6 @@ const formularioInicial = {
 	longitud: null,
 }
 
-function tieneCoordenadas(punto) {
-	return Number.isFinite(punto.latitud) && Number.isFinite(punto.longitud)
-}
-
 function PaginaPuntosRetiro() {
 	const navigate = useNavigate()
 	const [puntosRetiro, setPuntosRetiro] = useState([])
@@ -230,26 +226,20 @@ function PaginaPuntosRetiro() {
 						<thead className="bg-[#f5f8f9] text-[11px] uppercase text-[#607987]">
 							<tr>
 								<th className="px-5 py-3 font-semibold">Punto de retiro</th>
-								<th className="px-5 py-3 font-semibold">Ubicación</th>
 								<th className="px-5 py-3 font-semibold">Estado</th>
 								<th className="px-5 py-3 text-right font-semibold">Acciones</th>
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-[#e7edef]">
 							{cargando ? (
-								<tr><td className="px-5 py-10 text-center text-[#718896]" colSpan="4">Cargando puntos de retiro...</td></tr>
+								<tr><td className="px-5 py-10 text-center text-[#718896]" colSpan="3">Cargando puntos de retiro...</td></tr>
 							) : puntosFiltrados.length === 0 ? (
-								<tr><td className="px-5 py-10 text-center text-[#718896]" colSpan="4">No hay puntos de retiro para mostrar.</td></tr>
+								<tr><td className="px-5 py-10 text-center text-[#718896]" colSpan="3">No hay puntos de retiro para mostrar.</td></tr>
 							) : puntosFiltrados.map((punto) => (
 								<tr className="hover:bg-[#fbfcfc]" key={punto.id}>
 									<td className="px-5 py-3.5">
 										<p className="m-0 font-semibold">{punto.nombre}</p>
 										<p className="m-0 mt-0.5 text-xs text-[#718896]">{punto.facultad}</p>
-									</td>
-									<td className="px-5 py-3.5 text-xs text-[#687f8d]">
-										{tieneCoordenadas(punto)
-											? `${punto.latitud.toFixed(5)}, ${punto.longitud.toFixed(5)}`
-											: 'Sin coordenadas'}
 									</td>
 									<td className="px-5 py-3.5">
 										<span className={`inline-flex rounded px-2 py-1 text-[11px] font-semibold ${punto.habilitado ? 'bg-[#e8f5ed] text-[#24744e]' : 'bg-[#edf0f2] text-[#687783]'}`}>
