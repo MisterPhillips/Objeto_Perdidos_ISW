@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertCircle, ImagePlus, MapPin, PackageCheck, PackageOpen, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { AlertCircle, ChevronDown, ImagePlus, MapPin, PackageCheck, PackageOpen, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { apiRequest, apiRequestBlob } from '../config/apiClient.js'
 import { getSessionUser } from '../services/sessionService.js'
@@ -69,6 +69,72 @@ function ImagenObjeto({ objeto, clase = '' }) {
     return <MarcoImagen alt="" clase={clase} mensaje={mensaje} />
   }
   return <MarcoImagen alt={`Fotografía del objeto: ${objeto.descripcion || 'objeto encontrado'}`} clase={clase} src={imagenCargada.url} />
+}
+
+function SelectorAplicacion({ opciones, placeholder, value, onChange, ariaLabel }) {
+  const [abierto, setAbierto] = useState(false)
+  const contenedorRef = useRef(null)
+  const opcionSeleccionada = opciones.find((opcion) => String(opcion.value) === String(value))
+
+  useEffect(() => {
+    if (!abierto) return undefined
+
+    const cerrarAlInteractuar = (event) => {
+      if (!contenedorRef.current?.contains(event.target)) setAbierto(false)
+    }
+    const cerrarConEscape = (event) => {
+      if (event.key === 'Escape') setAbierto(false)
+    }
+
+    document.addEventListener('mousedown', cerrarAlInteractuar)
+    document.addEventListener('keydown', cerrarConEscape)
+    return () => {
+      document.removeEventListener('mousedown', cerrarAlInteractuar)
+      document.removeEventListener('keydown', cerrarConEscape)
+    }
+  }, [abierto])
+
+  return (
+    <div className="relative" ref={contenedorRef}>
+      <button
+        aria-expanded={abierto}
+        aria-haspopup="listbox"
+        aria-label={ariaLabel}
+        className="flex h-10 w-full items-center justify-between rounded border border-[#cbd8df] bg-white px-3 text-left text-sm font-normal text-[#31566a] outline-none transition-colors focus:border-[#1781a8] focus:ring-2 focus:ring-[#1781a8]/15"
+        onClick={() => setAbierto((actual) => !actual)}
+        type="button"
+      >
+        <span className={opcionSeleccionada ? '' : 'text-[#718896]'}>{opcionSeleccionada?.label || placeholder}</span>
+        <ChevronDown aria-hidden="true" className={`shrink-0 text-[#718896] transition-transform ${abierto ? 'rotate-180' : ''}`} size={17} />
+      </button>
+      {abierto && (
+        <div aria-label={ariaLabel} className="absolute z-30 mt-1 max-h-52 w-full overflow-y-auto rounded-md border border-[#cbd8df] bg-white py-1 shadow-lg" role="listbox">
+          {opciones.map((opcion) => {
+            const seleccionado = String(opcion.value) === String(value)
+            return (
+              <button
+                aria-selected={seleccionado}
+                className={`flex min-h-10 w-full items-center px-3 text-left text-sm ${
+                  seleccionado
+                    ? 'bg-[#eaf4f8] font-semibold text-[#0b4263]'
+                    : 'text-[#31566a] hover:bg-[#f2f7f9]'
+                }`}
+                key={opcion.value}
+                onClick={() => {
+                  onChange(opcion.value)
+                  setAbierto(false)
+                }}
+                role="option"
+                type="button"
+              >
+                {opcion.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function PaginaObjetos() {
@@ -230,6 +296,10 @@ function PaginaObjetos() {
       setErrorFormulario('El objeto seleccionado no tiene un identificador válido. Cierra la edición y usa “Nuevo objeto perdido” para registrar uno nuevo.')
       return
     }
+    if (!formulario.categoriaId || !formulario.puntoRetiroId) {
+      setErrorFormulario('Selecciona una categoría y un punto de retiro.')
+      return
+    }
 
     setGuardando(true)
     setErrorFormulario('')
@@ -266,6 +336,10 @@ function PaginaObjetos() {
 
   async function guardarDocumento(event) {
     event.preventDefault()
+    if (!formularioDocumento.puntoRetiroId) {
+      setErrorDocumento('Selecciona un punto de retiro.')
+      return
+    }
     setGuardandoDocumento(true)
     setErrorDocumento('')
     const esEdicion = documentoEditando !== null
@@ -493,17 +567,23 @@ function PaginaObjetos() {
               </div>
               <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
                 Categoría
-                <select className={campoClase} onChange={(event) => setFormulario({ ...formulario, categoriaId: event.target.value })} required value={formulario.categoriaId}>
-                  <option value="">Selecciona una categoría</option>
-                  {categoriasObjetoComun.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>)}
-                </select>
+                <SelectorAplicacion
+                  ariaLabel="Categoría"
+                  onChange={(categoriaId) => setFormulario({ ...formulario, categoriaId: String(categoriaId) })}
+                  opciones={categoriasObjetoComun.map((categoria) => ({ value: categoria.id, label: categoria.nombre }))}
+                  placeholder="Selecciona una categoría"
+                  value={formulario.categoriaId}
+                />
               </label>
               <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
                 Punto de retiro
-                <select className={campoClase} onChange={(event) => setFormulario({ ...formulario, puntoRetiroId: event.target.value })} required value={formulario.puntoRetiroId}>
-                  <option value="">Selecciona un punto habilitado</option>
-                  {puntosRetiro.map((punto) => <option key={punto.id} value={punto.id}>{punto.nombre} · {punto.facultad}</option>)}
-                </select>
+                <SelectorAplicacion
+                  ariaLabel="Punto de retiro"
+                  onChange={(puntoRetiroId) => setFormulario({ ...formulario, puntoRetiroId: String(puntoRetiroId) })}
+                  opciones={puntosRetiro.map((punto) => ({ value: punto.id, label: `${punto.nombre} · ${punto.facultad}` }))}
+                  placeholder="Selecciona un punto habilitado"
+                  value={formulario.puntoRetiroId}
+                />
               </label>
               <label className="flex cursor-pointer items-start gap-3 rounded border border-[#dbe4e8] bg-[#f7f9fa] p-3">
                 <input
@@ -576,15 +656,13 @@ function PaginaObjetos() {
               </label>
               <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
                 Punto de retiro
-                <select
-                  className={campoClase}
-                  onChange={(event) => setFormularioDocumento({ ...formularioDocumento, puntoRetiroId: event.target.value })}
-                  required
+                <SelectorAplicacion
+                  ariaLabel="Punto de retiro del documento"
+                  onChange={(puntoRetiroId) => setFormularioDocumento({ ...formularioDocumento, puntoRetiroId: String(puntoRetiroId) })}
+                  opciones={puntosRetiro.map((punto) => ({ value: punto.id, label: `${punto.nombre} · ${punto.facultad}` }))}
+                  placeholder="Selecciona un punto habilitado"
                   value={formularioDocumento.puntoRetiroId}
-                >
-                  <option value="">Selecciona un punto habilitado</option>
-                  {puntosRetiro.map((punto) => <option key={punto.id} value={punto.id}>{punto.nombre} · {punto.facultad}</option>)}
-                </select>
+                />
               </label>
               {errorDocumento && <p className="m-0 text-sm text-[#963d38]" role="alert">{errorDocumento}</p>}
               <div className="mt-1 flex justify-end gap-2">
