@@ -646,10 +646,11 @@ function PaginaObjetos() {
               </label>
               <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">
                 Descripción del documento
-                <textarea
+                <textarea 
                   className="min-h-24 resize-y rounded border border-[#cbd8df] px-3 py-2 text-sm font-normal outline-none focus:border-[#1781a8]"
                   maxLength="150"
                   onChange={(event) => setFormularioDocumento({ ...formularioDocumento, descripcion: event.target.value })}
+                  placeholder="Ingresa el nombre de documentos como: cédula de identidad, licencia de conducir, pasaporte, etc."
                   required
                   value={formularioDocumento.descripcion}
                 />
