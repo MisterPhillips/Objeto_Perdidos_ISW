@@ -35,7 +35,7 @@ const categoriasSeed = [
     descripcion: 'Accesorios de uso personal.',
   },
   {
-    nombre: 'Documento peronal',
+    nombre: 'Documento personal',
     descripcion: 'Documentos personales extraviados.',
   }
 ];
