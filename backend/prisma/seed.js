@@ -34,6 +34,10 @@ const categoriasSeed = [
     nombre: 'Accesorios personales',
     descripcion: 'Accesorios de uso personal.',
   },
+  {
+    nombre: 'Documento peronal',
+    descripcion: 'Documentos personales extraviados.',
+  }
 ];
 
 const puntosRetiroSeed = [
