@@ -156,11 +156,19 @@ function PaginaObjetos() {
   const [intentos, setIntentos] = useState(0)
   const [formulario, setFormulario] = useState({ descripcion: '', categoriaId: '', puntoRetiroId: '', objetoPrivado: false })
   const esFuncionario = getSessionUser()?.rol === 'FUNCIONARIO'
+  // Estados para el formulario de documentos
   const [documentoModalAbierto, setDocumentoModalAbierto] = useState(false)
   const [documentoEditando, setDocumentoEditando] = useState(null)
   const [formularioDocumento, setFormularioDocumento] = useState({ nombrePropietario: '', rutPropietario: '', descripcion: '', puntoRetiroId: '' })
   const [guardandoDocumento, setGuardandoDocumento] = useState(false)
   const [errorDocumento, setErrorDocumento] = useState('')
+  // Estados para los filtros
+  const [busqueda, setBusqueda] = useState('')
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('')
+  const [puntoRetiroSeleccionado, setPuntoRetiroSeleccionado] = useState('')
+  const [antiguedadSeleccionada, setAntiguedadSeleccionada] = useState('')
+  const [limiteResultados, setLimiteResultados] = useState(12)
+  const [totalObjetos, setTotalObjetos] = useState(0)
 
    // Constantes para validar si se puede registrar un objeto o documento
   const normalizarNombreCategoria = (nombre) => nombre.trim().toLocaleLowerCase('es')
@@ -209,31 +217,87 @@ function PaginaObjetos() {
     setErrorDocumento('')
   }
 
+  // Cargar categorías y puntos de retiro al iniciar la página
   useEffect(() => {
     let vigente = true
 
     Promise.all([
-      apiRequest('/objeto'),
       apiRequest('/categorias'),
       apiRequest('/puntos-retiro?habilitado=true'),
     ])
-      .then(([catalogo, listaCategorias, listaPuntos]) => {
+      .then(([listaCategorias, listaPuntos]) => {
         if (!vigente) return
-        setObjetos(catalogo.objetos)
         setCategorias(listaCategorias.categorias)
         setPuntosRetiro(listaPuntos.puntosRetiro)
       })
       .catch((requestError) => {
-        if (vigente) setError(requestError.message || 'No se pudo cargar la información de objetos.')
-      })
-      .finally(() => {
-        if (vigente) setCargando(false)
+        if (vigente) {
+          setError(requestError.message || 'No se pudieron cargar las opciones de los filtros.')
+        }
       })
 
     return () => {
       vigente = false
     }
   }, [intentos])
+
+  // Cargar objetos según filtros y búsqueda
+  useEffect(() => {
+    let vigente = true
+    const termino = busqueda.trim()
+
+    if (termino.length === 1) {
+      setObjetos([])
+      setTotalObjetos(0)
+      setCargando(false)
+      return () => {
+        vigente = false
+      }
+    }
+
+    const temporizador = setTimeout(async () => {
+      setCargando(true)
+      setError('')
+
+      try {
+        const parametros = new URLSearchParams({
+          limite: String(limiteResultados),
+        })
+
+        if (termino.length >= 2) parametros.set('busqueda', termino)
+        if (categoriaSeleccionada) parametros.set('categoriaId', categoriaSeleccionada)
+        if (puntoRetiroSeleccionado) parametros.set('puntoRetiroId', puntoRetiroSeleccionado)
+        if (antiguedadSeleccionada) parametros.set('diasDesde', antiguedadSeleccionada)
+
+        const catalogo = await apiRequest(`/objeto?${parametros.toString()}`)
+
+        if (vigente) {
+          setObjetos(catalogo.objetos)
+          setTotalObjetos(catalogo.total)
+        }
+      } catch (requestError) {
+        if (vigente) {
+          setObjetos([])
+          setTotalObjetos(0)
+          setError(requestError.message || 'No se pudo cargar la información de objetos.')
+        }
+      } finally {
+        if (vigente) setCargando(false)
+      }
+    }, termino.length >= 2 ? 350 : 0)
+
+    return () => {
+      vigente = false
+      clearTimeout(temporizador)
+    }
+  }, [
+    antiguedadSeleccionada,
+    busqueda,
+    categoriaSeleccionada,
+    limiteResultados,
+    puntoRetiroSeleccionado,
+    intentos,
+  ])
 
   function reintentar() {
     setError('')
@@ -414,28 +478,115 @@ function PaginaObjetos() {
           <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#658090]">CATÁLOGO DISPONIBLE</p>
           <p className="m-0 text-sm text-[#687f8d]">Consulta los objetos encontrados y dónde retirarlos.</p>
         </div>
+
+        {/* Botones para registrar objetos y documentos */}
         {esFuncionario && (
           <div className="flex flex-wrap items-center gap-2">
-          <button
-            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#0b4263] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#155779] disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={!puedeRegistrar}
-            onClick={() => abrirFormulario()}
-            type="button"
-          >
-            <Plus aria-hidden="true" size={17} /> Nuevo objeto perdido
-          </button>
+            <button
+              className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#0b4263] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#155779] disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!puedeRegistrar}
+              onClick={() => abrirFormulario()}
+              type="button"
+            >
+              <Plus aria-hidden="true" size={17} /> Nuevo objeto perdido
+            </button>
 
-          <button
-            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#0b4263] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#155779] disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={puntosRetiro.length === 0}
-            onClick={() => abrirFormularioDocumento()}
-            type="button"
-          >
-            <Plus aria-hidden="true" size={17} /> Nuevo documento perdido
-          </button>
+            <button
+              className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#0b4263] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#155779] disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={puntosRetiro.length === 0}
+              onClick={() => abrirFormularioDocumento()}
+              type="button"
+            >
+              <Plus aria-hidden="true" size={17} /> Nuevo documento perdido
+            </button>
           </div>
         )}
       </div>
+
+      {/* Filtros de busqueda  */}
+      <div className="mb-5 grid gap-3 rounded-md border border-[#dbe4e8] bg-white p-4 md:grid-cols-2 xl:grid-cols-4">
+          <label className="grid gap-1 text-xs font-semibold text-[#405d6d]">
+            Buscar
+            <input
+              className={`${campoClase} w-full`}
+              placeholder="Descripción, categoría o lugar"
+              value={busqueda}
+              onChange={(event) => {
+                setBusqueda(event.target.value)
+                setLimiteResultados(12)
+              }}
+            />
+          </label>
+
+          <label className="grid gap-1 text-xs font-semibold text-[#405d6d]">
+            Categoría
+            <select
+              className={`${campoClase} w-full`}
+              value={categoriaSeleccionada}
+              onChange={(event) => {
+                setCategoriaSeleccionada(event.target.value)
+                setLimiteResultados(12)
+              }}
+            >
+              <option value="">Todas las categorías</option>
+              {categorias.map((categoria) => (
+                <option key={categoria.id} value={categoria.id}>
+                  {categoria.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="grid gap-1 text-xs font-semibold text-[#405d6d]">
+            Lugar de retiro
+            <select
+              className={`${campoClase} w-full`}
+              value={puntoRetiroSeleccionado}
+              onChange={(event) => {
+                setPuntoRetiroSeleccionado(event.target.value)
+                setLimiteResultados(12)
+              }}
+            >
+              <option value="">Todos los lugares</option>
+              {puntosRetiro.map((punto) => (
+                <option key={punto.id} value={punto.id}>
+                  {punto.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="grid gap-1 text-xs font-semibold text-[#405d6d]">
+            Antigüedad
+            <select
+              className={`${campoClase} w-full`}
+              value={antiguedadSeleccionada}
+              onChange={(event) => {
+                setAntiguedadSeleccionada(event.target.value)
+                setLimiteResultados(12)
+              }}
+            >
+              <option value="">Cualquier fecha</option>
+              <option value="7">Últimos 7 días</option>
+              <option value="30">Últimos 30 días</option>
+              <option value="90">Últimos 90 días</option>
+            </select>
+          </label>
+
+          <button
+            className="text-left text-sm font-semibold text-[#1781a8] hover:underline"
+            onClick={() => {
+              setBusqueda('')
+              setCategoriaSeleccionada('')
+              setPuntoRetiroSeleccionado('')
+              setAntiguedadSeleccionada('')
+              setLimiteResultados(12)
+            }}
+            type="button"
+          >
+            Limpiar filtros
+          </button>
+        </div>
 
       {error && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#eccaca] bg-[#fff5f4] px-4 py-3 text-sm text-[#963d38]" role="alert">
