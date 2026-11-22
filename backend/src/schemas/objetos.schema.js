@@ -20,7 +20,7 @@ const booleanoFormulario = z.preprocess((valor) => {
   return valor;
 }, z.boolean({ error: 'El campo objetoPrivado debe ser booleano.' }));
 
-export const crearObjetoSchema = z.object({
+export const crearObjetoSchema = z.strictObject({
   descripcion: z.string({ error: 'La descripción es obligatoria y no puede superar los 150 caracteres.' })
     .trim()
     .min(1, { error: 'La descripción es obligatoria y no puede superar los 150 caracteres.' })
@@ -30,7 +30,7 @@ export const crearObjetoSchema = z.object({
   objetoPrivado: booleanoFormulario.optional().default(false),
 });
 
-export const crearDocumentoSchema = z.object({
+export const crearDocumentoSchema = z.strictObject({
   nombrePropietario: textoObligatorio('nombrePropietario', 100),
   rutPropietario: z.preprocess(
     (valor) => typeof valor === 'string' && !valor.trim() ? undefined : valor,
@@ -42,7 +42,7 @@ export const crearDocumentoSchema = z.object({
   puntoRetiroId: identificador('El identificador del punto de retiro no es válido.'),
 });
 
-export const actualizarDocumentoSchema = z.object({
+export const actualizarDocumentoSchema = z.strictObject({
   nombrePropietario: textoObligatorio('nombrePropietario', 100),
   rutPropietario: z.preprocess(
     (valor) => typeof valor === 'string' && !valor.trim() ? null : valor,
@@ -61,7 +61,7 @@ export const actualizarObjetoParamsSchema = z.object({
   id: identificador('El identificador del objeto no es válido.'),
 });
 
-export const actualizarObjetoSchema = z.object({
+export const actualizarObjetoSchema = z.strictObject({
   descripcion: z.string({ error: 'La descripción debe contener entre 1 y 150 caracteres.' })
     .trim()
     .min(1, { error: 'La descripción debe contener entre 1 y 150 caracteres.' })
