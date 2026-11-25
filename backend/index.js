@@ -1,5 +1,4 @@
 "use strict";
-import "dotenv/config";
 import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
@@ -17,8 +16,8 @@ import retirosRoutes from './src/routes/retiros.routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const PORT = process.env.PORT || 80; 
-const WEB_PORT = process.env.WEB_PORT || 443;
+const PORT = process.env.PORT || 3000;
+const WEB_PORT = process.env.WEB_PORT || 3001;
 
 function setupAPI() {
   const app = express();

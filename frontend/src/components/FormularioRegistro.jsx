@@ -132,7 +132,9 @@ function FormularioRegistro() {
               maxLength={150}
               onChange={(event) => setCorreo(event.target.value)}
               placeholder="nombre@alumnos.ubiobio.cl"
+              pattern="[^@\s]+@alumnos\.ubiobio\.cl"
               required
+              title="Usa un correo terminado en @alumnos.ubiobio.cl."
               type="email"
               value={correo}
             />

@@ -58,7 +58,7 @@ Inicia la API en modo desarrollo:
 npm run dev
 ```
 
-La API estará disponible en `http://localhost:3000/api`. El endpoint `GET /api/health` permite comprobar la conexión con la base de datos. El backend también intenta servir el frontend compilado desde `frontend/dist` en el puerto indicado por `WEB_PORT` (443 por defecto); para el desarrollo habitual, utiliza Vite como se indica a continuación.
+La API estará disponible en `http://localhost:3000/api`. El endpoint `GET /api/health` permite comprobar la conexión con la base de datos. El backend también intenta servir el frontend compilado desde `frontend/dist` en el puerto indicado por `WEB_PORT` (3001 por defecto); para el desarrollo habitual, utiliza Vite como se indica a continuación.
 
 ### 2. Configurar el frontend
 
@@ -79,9 +79,9 @@ El frontend estará disponible en la dirección local que indique Vite (normalme
 
 | Rol | Correo | Contraseña |
 |---|---|---|
-| Administrador | `admin@admin.cl` | `admin123` |
-| Funcionario | `funcionario@funcionario.cl` | `funcionario123` |
-| Estudiante | `estudiante@estudiante.cl` | `estudiante123` |
+| Administrador | `admin.prueba@alumnos.ubiobio.cl` | `admin123` |
+| Funcionario | `funcionario.prueba@alumnos.ubiobio.cl` | `funcionario123` |
+| Estudiante | `estudiante.prueba@alumnos.ubiobio.cl` | `estudiante123` |
 
 Estas credenciales son únicamente para desarrollo local. No las uses en un entorno compartido o de producción.
 

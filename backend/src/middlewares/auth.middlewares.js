@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma.js';
+import { esCorreoAlumno } from '../utils/correo.js';
 import { normalizarRutChileno, rutChilenoValido } from '../utils/rut.js';
 
 export const validateRegister = (req, res, next) => {
@@ -11,11 +12,18 @@ export const validateRegister = (req, res, next) => {
     });
   }
 
+  if (!esCorreoAlumno(correo)) {
+    return res.status(400).json({
+      error: 'Usa un correo terminado en @alumnos.ubiobio.cl.',
+    });
+  }
+
   if (!rutChilenoValido(rut)) {
     return res.status(400).json({ error: 'Ingresa un RUT válido, por ejemplo 12.345.678-5.' });
   }
 
   req.body.rut = normalizarRutChileno(rut);
+  req.body.correo = correo.trim().toLowerCase();
   next();
 };
 
