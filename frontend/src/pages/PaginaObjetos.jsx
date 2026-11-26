@@ -558,7 +558,7 @@ function PaginaObjetos() {
                     />
                   </span>
                 </label>
-                <p className="m-0 text-xs font-normal text-[#718896]">JPG, PNG o WebP; máximo 5 MB. Se reduce y convierte a JPG al guardar.</p>
+                <p className="m-0 text-xs font-normal text-[#718896]">JPG, PNG o WebP; máximo 5 MB.</p>
                 {imagenPreview ? (
                   <MarcoImagen alt="Vista previa de la fotografía seleccionada" clase="w-full" src={imagenPreview} />
                 ) : objetoEditando?.imagen ? (

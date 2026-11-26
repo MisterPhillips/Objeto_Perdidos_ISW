@@ -96,14 +96,10 @@ function PaginaUsuarios() {
     setError('')
     setAviso('')
     try {
-      if (usuario.activo) {
-        await apiRequest(`/usuarios/${usuario.id}`, { method: 'DELETE' })
-      } else {
-        await apiRequest(`/usuarios/${usuario.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ activo: true }),
-        })
-      }
+      await apiRequest(`/usuarios/${usuario.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ activo: !usuario.activo }),
+      })
       setAviso(usuario.activo ? 'Usuario desactivado.' : 'Usuario reactivado.')
       recargarUsuarios()
     } catch (requestError) {

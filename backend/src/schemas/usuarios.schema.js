@@ -63,5 +63,3 @@ export const actualizarUsuarioSchema = z.object({
 }).refine((datos) => Object.values(datos).some((valor) => valor !== undefined), {
 	error: 'Indica al menos un campo para actualizar.',
 });
-
-export const eliminarUsuarioParamsSchema = actualizarUsuarioParamsSchema;

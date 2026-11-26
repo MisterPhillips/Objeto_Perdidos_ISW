@@ -1,14 +1,12 @@
 import {
 	actualizarUsuario as actualizarUsuarioService,
 	crearUsuario as crearUsuarioService,
-	desactivarUsuario as desactivarUsuarioService,
 	listarUsuarios as listarUsuariosService,
 } from '../services/usuarios.service.js';
 import {
 	actualizarUsuarioParamsSchema,
 	actualizarUsuarioSchema,
 	crearUsuarioSchema,
-	eliminarUsuarioParamsSchema,
 } from '../schemas/usuarios.schema.js';
 
 const responderError = (res, error) => res.status(error.statusCode || 500).json({
@@ -38,7 +36,7 @@ export const crearUsuario = async (req, res) => {
 		const datos = validar(crearUsuarioSchema, req.body, res);
 		if (!datos) return;
 
-		const usuario = await crearUsuarioService(datos);
+		const usuario = await crearUsuarioService(datos, req.user.id);
 		return res.status(201).json({ message: 'Usuario creado exitosamente.', usuario });
 	} catch (error) {
 		return responderError(res, error);
@@ -53,20 +51,8 @@ export const actualizarUsuario = async (req, res) => {
 		const datos = validar(actualizarUsuarioSchema, req.body || {}, res);
 		if (!datos) return;
 
-		const usuario = await actualizarUsuarioService(parametros.id, datos);
+		const usuario = await actualizarUsuarioService(parametros.id, datos, req.user.id);
 		return res.status(200).json({ message: 'Usuario actualizado exitosamente.', usuario });
-	} catch (error) {
-		return responderError(res, error);
-	}
-};
-
-export const eliminarUsuario = async (req, res) => {
-	try {
-		const parametros = validar(eliminarUsuarioParamsSchema, req.params, res);
-		if (!parametros) return;
-
-		const usuario = await desactivarUsuarioService(parametros.id, req.user.id);
-		return res.status(200).json({ message: 'Usuario desactivado exitosamente.', usuario });
 	} catch (error) {
 		return responderError(res, error);
 	}

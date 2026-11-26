@@ -11,6 +11,7 @@ import PaginaBitacoraRetiros from './pages/PaginaBitacoraRetiros.jsx'
 import PaginaCategorias from './pages/PaginaCategorias.jsx'
 import PaginaUsuarios from './pages/PaginaUsuarios.jsx'
 import PaginaPuntosRetiro from './pages/PaginaPuntosRetiro.jsx'
+import PaginaAuditoria from './pages/PaginaAuditoria.jsx'
 import {
   clearSession,
   getSessionExpiration,
@@ -80,6 +81,7 @@ function App() {
         <Route element={<RutaAdministrador><PaginaPrincipal><PaginaCategorias /></PaginaPrincipal></RutaAdministrador>} path="/admin/categorias" />
         <Route element={<RutaAdministrador><PaginaPrincipal><PaginaUsuarios /></PaginaPrincipal></RutaAdministrador>} path="/admin/usuarios" />
         <Route element={<RutaAdministrador><PaginaPrincipal><PaginaPuntosRetiro /></PaginaPrincipal></RutaAdministrador>} path="/admin/puntos-retiro" />
+        <Route element={<RutaAdministrador><PaginaPrincipal><PaginaAuditoria /></PaginaPrincipal></RutaAdministrador>} path="/admin/auditoria" />
         <Route element={<RutaFuncionario><PaginaPrincipal><PaginaRetiros /></PaginaPrincipal></RutaFuncionario>} path="/funcionario/retiros" />
         <Route element={<RutaFuncionario><PaginaPrincipal><PaginaBitacoraRetiros /></PaginaPrincipal></RutaFuncionario>} path="/funcionario/bitacora-retiros" />
         <Route element={<RutaAutenticada><PaginaPrincipal><PaginaInicio /></PaginaPrincipal></RutaAutenticada>} path="/inicio" />

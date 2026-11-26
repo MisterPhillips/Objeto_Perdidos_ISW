@@ -10,6 +10,7 @@ Aplicación web para registrar, buscar y gestionar objetos perdidos en un campus
 - Gestión de objetos, imágenes y documentos por funcionarios.
 - Registro e historial de retiros.
 - Administración de usuarios, categorías y puntos de retiro.
+- Bitácora administrativa de cambios en usuarios y categorías.
 
 ## Tecnologías
 

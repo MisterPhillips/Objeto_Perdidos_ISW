@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import prisma from '../config/prisma.js';
+import { registrarAuditoria } from './auditoria.service.js';
 
 const crearError = (mensaje, statusCode) => {
 	const error = new Error(mensaje);
@@ -40,19 +41,28 @@ export const listarUsuarios = async () => prisma.usuario.findMany({
 	orderBy: [{ activo: 'desc' }, { nombre: 'asc' }],
 });
 
-export const crearUsuario = async ({ nombre, rut, correo, contrasena, rol }) => {
+export const crearUsuario = async ({ nombre, rut, correo, contrasena, rol }, actorId) => {
 	const contrasenaHasheada = await bcrypt.hash(contrasena, 10);
 
 	try {
-		return await prisma.usuario.create({
-			data: {
-				nombre,
-				rut,
-				correo: correo.toLowerCase(),
-				contrasena: contrasenaHasheada,
-				rol,
-			},
-			select: seleccionarUsuarioPublico,
+		return await prisma.$transaction(async (tx) => {
+			const usuario = await tx.usuario.create({
+				data: {
+					nombre,
+					rut,
+					correo: correo.toLowerCase(),
+					contrasena: contrasenaHasheada,
+					rol,
+				},
+				select: seleccionarUsuarioPublico,
+			});
+			await registrarAuditoria(tx, {
+				tipoEntidad: 'USUARIO',
+				entidadId: usuario.id,
+				accion: 'CREAR',
+				actorId,
+			});
+			return usuario;
 		});
 	} catch (error) {
 		if (error.code === 'P2002') {
@@ -65,9 +75,12 @@ export const crearUsuario = async ({ nombre, rut, correo, contrasena, rol }) => 
 	}
 };
 
-export const actualizarUsuario = async (usuarioId, datos) => {
+export const actualizarUsuario = async (usuarioId, datos, actorId) => {
 	const existente = await prisma.usuario.findUnique({ where: { id: usuarioId } });
 	if (!existente) throw crearError('El usuario no existe.', 404);
+	if (datos.activo === false && usuarioId === actorId) {
+		throw crearError('No puedes desactivar tu propia cuenta.', 400);
+	}
 
 	const dejaraDeSerAdminActivo = existente.rol === 'ADMIN'&& existente.activo
 		&& (datos.rol !== undefined && datos.rol !== 'ADMIN'
@@ -80,12 +93,25 @@ export const actualizarUsuario = async (usuarioId, datos) => {
 	if (datosActualizados.contrasena) {
 		datosActualizados.contrasena = await bcrypt.hash(datosActualizados.contrasena, 10);
 	}
+	let accion = 'EDITAR';
+	if (datos.activo !== undefined && datos.activo !== existente.activo) {
+		accion = datos.activo ? 'ACTIVAR' : 'DESACTIVAR';
+	}
 
 	try {
-		return await prisma.usuario.update({
-			where: { id: usuarioId },
-			data: datosActualizados,
-			select: seleccionarUsuarioPublico
+		return await prisma.$transaction(async (tx) => {
+			const usuario = await tx.usuario.update({
+				where: { id: usuarioId },
+				data: datosActualizados,
+				select: seleccionarUsuarioPublico,
+			});
+			await registrarAuditoria(tx, {
+				tipoEntidad: 'USUARIO',
+				entidadId: usuario.id,
+				accion,
+				actorId,
+			});
+			return usuario;
 		});
 	} catch (error) {
 		if (error.code === 'P2002') {
@@ -96,20 +122,4 @@ export const actualizarUsuario = async (usuarioId, datos) => {
 		}
 		throw error;
 	}
-};
-
-export const desactivarUsuario = async (usuarioId, administradorId) => {
-	if (usuarioId === administradorId) {
-		throw crearError('No puedes desactivar tu propia cuenta.', 400);
-	}
-
-	const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
-	if (!usuario) throw crearError('El usuario no existe.', 404);
-	if (usuario.activo && usuario.rol === 'ADMIN') await comprobarUltimoAdmin(usuarioId);
-
-	return prisma.usuario.update({
-		where: { id: usuarioId },
-		data: { activo: false },
-		select: seleccionarUsuarioPublico,
-	});
 };

@@ -32,7 +32,7 @@ export const guardarImagen = async (archivo) => {
       imagen = await sharp(archivo.buffer, { limitInputPixels: 40_000_000 })
         .rotate()
         .resize({ width: 1280, height: 1280, fit: 'inside', withoutEnlargement: true })
-        .jpeg({ quality: calidad, mozjpeg: true })
+        .webp({ quality: calidad })
         .toBuffer();
     } catch {
       throw errorImagen('No se pudo procesar la imagen seleccionada.');
@@ -46,14 +46,14 @@ export const guardarImagen = async (archivo) => {
   }
 
   await mkdir(directorioImagenes, { recursive: true });
-  const nombre = `${randomUUID()}.jpg`;
+  const nombre = `${randomUUID()}.webp`;
   await writeFile(path.join(directorioImagenes, nombre), imagen, { flag: 'wx' });
   return nombre;
 };
 
 export const eliminarImagen = async (nombre) => {
   if (!nombre) return;
-  if (!/^[\da-f-]{36}\.jpg$/i.test(nombre)) {
+  if (!/^[\da-f-]{36}\.(?:jpg|webp)$/i.test(nombre)) {
     throw new Error('El nombre de imagen almacenado no es válido.');
   }
 
@@ -65,7 +65,7 @@ export const eliminarImagen = async (nombre) => {
 };
 
 export const leerImagen = async (nombre) => {
-  if (!/^[\da-f-]{36}\.jpg$/i.test(nombre)) {
+  if (!/^[\da-f-]{36}\.(?:jpg|webp)$/i.test(nombre)) {
     throw new Error('El nombre de imagen almacenado no es válido.');
   }
   return readFile(path.join(directorioImagenes, nombre));
