@@ -22,6 +22,18 @@ enum EstadoObjeto {
   ENTREGADO
 }
 
+enum TipoEntidadAuditoria {
+  USUARIO
+  CATEGORIA
+}
+
+enum AccionAuditoria {
+  CREAR
+  EDITAR
+  ACTIVAR
+  DESACTIVAR
+}
+
 
 // ============================
 // MODELOS Agregar booleana en objetos privado o publico, cambiar nombre de ubicacion a sede
@@ -40,8 +52,24 @@ model Usuario {
 
   objetosRegistrados Objeto[]
   retirosRealizados  Retiro[]
+  accionesAuditoria  RegistroAuditoria[] @relation("AuditoriasUsuario")
 
   @@map("usuarios")
+}
+
+model RegistroAuditoria {
+  id          Int                  @id @default(autoincrement())
+  tipoEntidad TipoEntidadAuditoria
+  entidadId   Int
+  accion      AccionAuditoria
+  actorId     Int
+  createdAt   DateTime             @default(now())
+
+  actor Usuario @relation("AuditoriasUsuario", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([createdAt])
+  @@index([tipoEntidad, entidadId])
+  @@map("registros_auditoria")
 }
 
 model Categoria {

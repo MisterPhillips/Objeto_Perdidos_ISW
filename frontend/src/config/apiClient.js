@@ -59,7 +59,7 @@ export async function apiRequestBlob(path) {
   try {
     response = await fetch(`${API_BASE_URL}/${path.replace(/^\//, '')}`, {
       headers: {
-        Accept: 'image/jpeg',
+        Accept: 'image/webp, image/jpeg',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     })
