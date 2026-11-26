@@ -5,21 +5,21 @@ const usuariosSeed = [
   {
     nombre: 'Administrador de prueba',
     rut: '11111111-1',
-    correo: 'admin@admin.cl',
+    correo: 'admin.prueba@alumnos.ubiobio.cl',
     contrasena: 'admin123',
     rol: 'ADMIN',
   },
   {
     nombre: 'Funcionario de prueba',
     rut: '22222222-2',
-    correo: 'funcionario@funcionario.cl',
+    correo: 'funcionario.prueba@alumnos.ubiobio.cl',
     contrasena: 'funcionario123',
     rol: 'FUNCIONARIO',
   },
   {
     nombre: 'Estudiante de prueba',
     rut: '33333333-3',
-    correo: 'estudiante@estudiante.cl',
+    correo: 'estudiante.prueba@alumnos.ubiobio.cl',
     contrasena: 'estudiante123',
     rol: 'ESTUDIANTE',
   },
@@ -34,6 +34,10 @@ const categoriasSeed = [
     nombre: 'Accesorios personales',
     descripcion: 'Accesorios de uso personal.',
   },
+  {
+    nombre: 'Documento personal',
+    descripcion: 'Documentos personales extraviados.',
+  }
 ];
 
 const puntosRetiroSeed = [
@@ -131,10 +135,11 @@ const seed = async () => {
   for (const datos of usuariosSeed) {
     const contrasena = contrasenasHasheadas.get(datos.correo);
     usuarios[datos.rol] = await prisma.usuario.upsert({
-      where: { correo: datos.correo },
+      where: { rut: datos.rut },
       update: {
         nombre: datos.nombre,
         rut: datos.rut,
+        correo: datos.correo,
         contrasena,
         rol: datos.rol,
         activo: true,

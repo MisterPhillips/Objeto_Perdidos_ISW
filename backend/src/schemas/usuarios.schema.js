@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { esCorreoAlumno } from '../utils/correo.js';
 import { normalizarRutChileno, rutChilenoValido } from '../utils/rut.js';
 
 const usuarioId = z.coerce
@@ -29,8 +30,8 @@ const correoUsuario = z.string({
 	.trim()
 	.min(1, { error: 'Indica un correo válido de hasta 150 caracteres.' })
 	.max(150, { error: 'Indica un correo válido de hasta 150 caracteres.' })
-	.regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
-		error: 'Indica un correo válido de hasta 150 caracteres.',
+	.refine(esCorreoAlumno, {
+		error: 'Usa un correo terminado en @alumnos.ubiobio.cl.',
 	});
 
 const contrasenaUsuario = z.string({
@@ -62,5 +63,3 @@ export const actualizarUsuarioSchema = z.object({
 }).refine((datos) => Object.values(datos).some((valor) => valor !== undefined), {
 	error: 'Indica al menos un campo para actualizar.',
 });
-
-export const eliminarUsuarioParamsSchema = actualizarUsuarioParamsSchema;

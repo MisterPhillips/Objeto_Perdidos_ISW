@@ -176,8 +176,9 @@ export const obtenerImagenObjeto = async (req, res) => {
     }
 
     const imagen = await leerImagen(objeto.imagen);
+    const tipoImagen = objeto.imagen.toLowerCase().endsWith('.webp') ? 'image/webp' : 'image/jpeg';
     return res
-      .type('image/jpeg')
+      .type(tipoImagen)
       .set('Cache-Control', 'private, no-store')
       .send(imagen);
   } catch (error) {

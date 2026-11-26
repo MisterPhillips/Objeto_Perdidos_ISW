@@ -1,5 +1,4 @@
 "use strict";
-import "dotenv/config";
 import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
@@ -14,11 +13,12 @@ import categoriasRoutes from './src/routes/categorias.routes.js';
 import puntosRetiroRoutes from './src/routes/puntoretiro.routes.js';
 import usuariosRoutes from './src/routes/usuarios.routes.js';
 import retirosRoutes from './src/routes/retiros.routes.js';
+import auditoriaRoutes from './src/routes/auditoria.routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const PORT = process.env.PORT || 80; 
-const WEB_PORT = process.env.WEB_PORT || 443;
+const PORT = process.env.PORT || 3000;
+const WEB_PORT = process.env.WEB_PORT || 3001;
 
 function setupAPI() {
   const app = express();
@@ -43,6 +43,7 @@ function setupAPI() {
   app.use('/api', puntosRetiroRoutes);
   app.use('/api', usuariosRoutes);
   app.use('/api', retirosRoutes);
+  app.use('/api', auditoriaRoutes);
 
   app.listen(PORT, () => {
     console.log(`API corriendo en puerto ${PORT}`);
@@ -63,6 +64,7 @@ function setupWeb() {
   web.use('/api', puntosRetiroRoutes);
   web.use('/api', usuariosRoutes);
   web.use('/api', retirosRoutes);
+  web.use('/api', auditoriaRoutes);
 
   web.use(express.static(frontendPath));
   web.get(/.*/, (req, res) => {

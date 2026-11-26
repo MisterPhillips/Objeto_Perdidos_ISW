@@ -4,6 +4,7 @@ import {
   ClipboardList,
   ClipboardCheck,
   House,
+  History,
   LogOut,
   MapPin,
   Menu,
@@ -27,6 +28,7 @@ const seccionesAdministracion = [
   { label: 'Categorías', path: '/admin/categorias', icon: Tags },
   { label: 'Usuarios', path: '/admin/usuarios', icon: Users },
   { label: 'Gestionar puntos de retiro', path: '/admin/puntos-retiro', icon: Building2 },
+  { label: 'Bitácora de gestión', path: '/admin/auditoria', icon: History },
 ]
 
 function PaginaPrincipal({ children }) {

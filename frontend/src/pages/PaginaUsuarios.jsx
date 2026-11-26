@@ -96,14 +96,10 @@ function PaginaUsuarios() {
     setError('')
     setAviso('')
     try {
-      if (usuario.activo) {
-        await apiRequest(`/usuarios/${usuario.id}`, { method: 'DELETE' })
-      } else {
-        await apiRequest(`/usuarios/${usuario.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ activo: true }),
-        })
-      }
+      await apiRequest(`/usuarios/${usuario.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ activo: !usuario.activo }),
+      })
       setAviso(usuario.activo ? 'Usuario desactivado.' : 'Usuario reactivado.')
       recargarUsuarios()
     } catch (requestError) {
@@ -224,7 +220,7 @@ function PaginaUsuarios() {
                 />
               </label>
               <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">Correo electrónico
-                <input autoComplete="email" className="h-10 rounded border border-[#cbd8df] px-3 text-sm font-normal outline-none focus:border-[#1781a8]" maxLength="150" onChange={(event) => setFormulario({ ...formulario, correo: event.target.value })} required type="email" value={formulario.correo} />
+                <input autoComplete="email" className="h-10 rounded border border-[#cbd8df] px-3 text-sm font-normal outline-none focus:border-[#1781a8]" maxLength="150" onChange={(event) => setFormulario({ ...formulario, correo: event.target.value })} pattern="[^@\s]+@alumnos\.ubiobio\.cl" required title="Usa un correo terminado en @alumnos.ubiobio.cl." type="email" value={formulario.correo} />
               </label>
               <label className="grid gap-1.5 text-xs font-semibold text-[#405d6d]">Rol
                 <select className="h-10 rounded border border-[#cbd8df] bg-white px-3 text-sm font-normal outline-none focus:border-[#1781a8]" onChange={(event) => setFormulario({ ...formulario, rol: event.target.value })} value={formulario.rol}>

@@ -81,12 +81,15 @@ function PaginaCategorias() {
     }
   }
 
-  async function desactivarCategoria(categoria) {
+  async function actualizarEstadoCategoria(categoria) {
     if (!window.confirm(`¿Desactivar la categoría "${categoria.nombre}"?`)) return
     setError('')
     setAviso('')
     try {
-      await apiRequest(`/categorias/${categoria.id}`, { method: 'DELETE' })
+      await apiRequest(`/categorias/${categoria.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ activa: false }),
+      })
       setAviso('Categoría desactivada.')
       setIntentos((actuales) => actuales + 1)
     } catch (requestError) {
@@ -140,7 +143,7 @@ function PaginaCategorias() {
                   <td className="max-w-md px-5 py-4 text-[#687f8d]">{categoria.descripcion || 'Sin descripción'}</td>
                   <td className="px-5 py-4"><div className="flex justify-end gap-2">
                     <button aria-label={`Editar ${categoria.nombre}`} className="grid size-9 place-items-center rounded border border-[#d5e0e5] text-[#31566a] hover:bg-[#edf5f8]" onClick={() => abrirFormulario(categoria)} title="Editar categoría" type="button"><Pencil size={15} /></button>
-                    <button aria-label={`Desactivar ${categoria.nombre}`} className="grid size-9 place-items-center rounded border border-[#e5cfca] text-[#a14f45] hover:bg-[#fff4f2]" onClick={() => desactivarCategoria(categoria)} title="Desactivar categoría" type="button"><X size={16} /></button>
+                    <button aria-label={`Desactivar ${categoria.nombre}`} className="grid size-9 place-items-center rounded border border-[#e5cfca] text-[#a14f45] hover:bg-[#fff4f2]" onClick={() => actualizarEstadoCategoria(categoria)} title="Desactivar categoría" type="button"><X size={16} /></button>
                   </div></td>
                 </tr>
               ))}

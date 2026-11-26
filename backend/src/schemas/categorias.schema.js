@@ -28,8 +28,7 @@ export const actualizarCategoriaSchema = z.object({
 		.max(80, { error: 'El nombre no puede superar los 80 caracteres.' })
 		.optional(),
 	descripcion: descripcionOpcional,
+	activa: z.boolean({ error: 'El campo activa debe ser booleano.' }).optional(),
 }).refine((datos) => Object.values(datos).some((valor) => valor !== undefined), {
-	error: 'Indica el nombre o la descripción para actualizar.',
+	error: 'Indica el nombre, la descripción o el estado para actualizar.',
 });
-
-export const eliminarCategoriaParamsSchema = actualizarCategoriaParamsSchema;

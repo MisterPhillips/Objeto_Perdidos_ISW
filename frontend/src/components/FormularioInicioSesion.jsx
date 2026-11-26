@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { login } from '../services/authService.js'
 import { saveSession } from '../services/sessionService.js'
 
@@ -12,12 +12,10 @@ function FormularioInicioSesion() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState('error')
-  const [pendingAction, setPendingAction] = useState('')
 
   async function handleSubmit(event) {
     event.preventDefault()
     setMessage('')
-    setPendingAction('')
     setIsSubmitting(true)
 
     try {
@@ -32,12 +30,6 @@ function FormularioInicioSesion() {
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  function showPendingAction(action) {
-    setMessageType('error')
-    setMessage('Esta opción estará disponible cuando se conecte el servicio de cuentas.')
-    setPendingAction(action)
   }
 
   return (
@@ -96,13 +88,7 @@ function FormularioInicioSesion() {
           </div>
         </div>
 
-        <div className="mb-5 mt-[18px] flex justify-end">
-          <button className="border-0 bg-transparent px-0 py-[5px] text-[11px] font-semibold text-[#1688c7] hover:text-[#096da8] hover:underline" onClick={() => showPendingAction('recovery')} type="button">
-            ¿Olvidaste tu contraseña?
-          </button>
-        </div>
-
-        <button className="flex min-h-12 w-full items-center justify-center gap-[9px] rounded-xl border border-[#24516e] bg-[#073252] text-[13px] font-semibold text-white shadow-[0_6px_14px_rgb(7_50_82_/_16%)] transition hover:-translate-y-px hover:bg-[#0d4268] disabled:cursor-wait disabled:opacity-[.78]" disabled={isSubmitting} type="submit">
+        <button className="mt-[18px] flex min-h-12 w-full items-center justify-center gap-[9px] rounded-xl border border-[#24516e] bg-[#073252] text-[13px] font-semibold text-white shadow-[0_6px_14px_rgb(7_50_82_/_16%)] transition hover:-translate-y-px hover:bg-[#0d4268] disabled:cursor-wait disabled:opacity-[.78]" disabled={isSubmitting} type="submit">
           {isSubmitting ? 'Ingresando...' : 'Ingresar'}
           {!isSubmitting && <ArrowRight size={17} aria-hidden="true" />}
         </button>
@@ -111,21 +97,13 @@ function FormularioInicioSesion() {
           <p
             aria-live="polite"
             className={`mt-3 text-xs leading-relaxed ${messageType === 'success' ? 'text-[#24744e]' : 'text-[#a13d3d]'}`}
-            key={pendingAction || message}
+            key={message}
             role="status"
           >
             {message}
           </p>
         )}
       </form>
-
-      <hr className="mb-4 mt-[23px] h-px border-0 bg-[#e5ebef]" />
-      <div className="flex flex-wrap items-center justify-center gap-1 text-xs text-[#81929f]">
-        <span>¿No tienes una cuenta?</span>
-        <Link className="px-0 py-[5px] text-[11px] font-semibold text-[#1688c7] no-underline hover:text-[#096da8] hover:underline" to="/registro">
-          Regístrate
-        </Link>
-      </div>
     </section>
   )
 }
